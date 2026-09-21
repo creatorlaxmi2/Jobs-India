@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Briefcase, Shield, LogIn, UserPlus, X } from 'lucide-react';
+import { User, Briefcase, Shield, LogIn, UserPlus, X, Lock, KeyRound } from 'lucide-react';
 import { AppMode } from '../types';
 
 interface SwitchModeModalProps {
@@ -8,6 +8,8 @@ interface SwitchModeModalProps {
   currentMode: AppMode;
   onSelectMode: (mode: AppMode) => void;
   onOpenAuth: (initialTab: 'login' | 'signup') => void;
+  isAdminAuthenticated?: boolean;
+  onOpenAdminAuth?: (initialView?: 'login' | 'reset') => void;
 }
 
 export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
@@ -16,6 +18,8 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
   currentMode,
   onSelectMode,
   onOpenAuth,
+  isAdminAuthenticated = false,
+  onOpenAdminAuth,
 }) => {
   if (!isOpen) return null;
 
@@ -99,31 +103,72 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
             </div>
           </button>
 
-          {/* Option 3: Admin Panel */}
-          <button
-            id="mode-admin-btn"
-            onClick={() => {
-              onSelectMode('admin');
-              onClose();
-            }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-left transition-all group ${
-              currentMode === 'admin'
-                ? 'bg-[#3B2C63] ring-1 ring-[#A855F7]/60'
-                : 'hover:bg-[#1C2438]'
-            }`}
-          >
-            <div className="flex-shrink-0">
-              <Shield className="w-5 h-5 text-[#A855F7] stroke-[2.2]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-[15px] text-white tracking-tight leading-snug">
-                Admin Panel
-              </span>
-              <span className="text-xs text-[#C4B5FD] leading-tight">
-                Verify & moderate
-              </span>
-            </div>
-          </button>
+          {/* Option 3: Admin Panel (Password Protected) */}
+          <div className="relative">
+            <button
+              id="mode-admin-btn"
+              onClick={() => {
+                if (isAdminAuthenticated) {
+                  onSelectMode('admin');
+                  onClose();
+                } else if (onOpenAdminAuth) {
+                  onClose();
+                  onOpenAdminAuth('login');
+                } else {
+                  onSelectMode('admin');
+                  onClose();
+                }
+              }}
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-left transition-all group ${
+                currentMode === 'admin'
+                  ? 'bg-[#3B2C63] ring-1 ring-[#A855F7]/60'
+                  : 'hover:bg-[#1C2438]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex-shrink-0">
+                  <Shield className="w-5 h-5 text-[#A855F7] stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-[15px] text-white tracking-tight leading-snug">
+                      Admin Panel
+                    </span>
+                    {!isAdminAuthenticated ? (
+                      <span className="bg-purple-500/20 text-[#D8B4FE] text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border border-purple-500/30">
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>Protected</span>
+                      </span>
+                    ) : (
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/30">
+                        <span>Unlocked</span>
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-[#C4B5FD] leading-tight truncate">
+                    Verify & moderate
+                  </span>
+                </div>
+              </div>
+
+              {!isAdminAuthenticated && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClose();
+                      onOpenAdminAuth?.('reset');
+                    }}
+                    className="text-[10px] text-purple-300 hover:text-white bg-purple-900/50 hover:bg-purple-800 px-2 py-1 rounded-lg border border-purple-700/50 transition-colors"
+                    title="Reset Admin Password"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Divider */}

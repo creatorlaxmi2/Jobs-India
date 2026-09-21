@@ -4,6 +4,17 @@ export type AppMode = 'job-seeker' | 'employer' | 'admin';
 
 export type JobType = 'Full Time' | 'Part Time' | 'Work From Home' | 'Internship';
 
+export interface RecruiterContact {
+  name: string;
+  designation: string;
+  phone: string;
+  email: string;
+  isVerified?: boolean;
+  kycDocument?: string;
+  companyGstin?: string;
+  verifiedAt?: string;
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -37,6 +48,7 @@ export interface Job {
     address: string;
     verified: boolean;
   };
+  recruiterContact?: RecruiterContact;
 }
 
 export interface UserProfile {

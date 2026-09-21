@@ -7,8 +7,10 @@ import {
   CheckCircle2,
   Navigation,
   ArrowRight,
+  UserCheck,
 } from 'lucide-react';
 import { Job } from '../types';
+import { getJobRecruiter } from '../data/mockJobs';
 
 interface JobCardProps {
   job: Job;
@@ -93,6 +95,22 @@ export const JobCard: React.FC<JobCardProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#35A853] flex-shrink-0" />
               )}
             </div>
+            {/* HR Recruiter Info */}
+            {(() => {
+              const recruiter = getJobRecruiter(job);
+              return (
+                <div className="flex items-center gap-1.5 mt-1 text-[11px] text-gray-500">
+                  <UserCheck className="w-3 h-3 text-[#4055B8] flex-shrink-0" />
+                  <span className="font-medium text-gray-700 truncate max-w-[130px]">
+                    HR: {recruiter.name}
+                  </span>
+                  <span>•</span>
+                  <span className="text-emerald-600 font-semibold truncate">
+                    {recruiter.phone}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

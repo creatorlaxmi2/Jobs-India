@@ -15,8 +15,14 @@ import {
   ShieldCheck,
   Check,
   ArrowRight,
+  Phone,
+  Mail,
+  MessageCircle,
+  UserCheck,
+  BadgeCheck,
 } from 'lucide-react';
 import { Job } from '../types';
+import { getJobRecruiter } from '../data/mockJobs';
 
 interface JobDetailsModalProps {
   job: Job | null;
@@ -265,6 +271,87 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
               <p className="text-xs text-gray-500">{job.aboutCompany.address}</p>
             </div>
           </section>
+
+          {/* Verified Recruiter & HR Contact Details */}
+          {(() => {
+            const recruiter = getJobRecruiter(job);
+            return (
+              <section className="space-y-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[#1E2544] flex items-center gap-1.5">
+                    <UserCheck className="w-4 h-4 text-[#4055B8]" />
+                    <span>Verified Recruiter Contact</span>
+                  </h3>
+                  <span className="bg-[#ECFDF5] text-[#059669] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#A7F3D0] flex items-center gap-1">
+                    <BadgeCheck className="w-3 h-3" />
+                    <span>KYC Verified</span>
+                  </span>
+                </div>
+
+                <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#EEF2FF] space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#1E2544]">{recruiter.name}</h4>
+                      <p className="text-xs text-gray-500">{recruiter.designation}</p>
+                      <p className="text-[11px] text-[#4055B8] font-semibold">{job.company}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-200/60">
+                    {/* Recruiter Mobile No with Call & WhatsApp buttons */}
+                    <div className="bg-white p-2.5 rounded-xl border border-gray-200 flex items-center justify-between gap-1 shadow-2xs">
+                      <div className="min-w-0">
+                        <span className="text-[10px] text-gray-400 block font-medium">Recruiter Mobile</span>
+                        <span className="font-bold text-gray-900 tracking-wide block truncate">
+                          {recruiter.phone}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <a
+                          href={`tel:${recruiter.phone.replace(/[^0-9+]/g, '')}`}
+                          className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                          title="Call Recruiter"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href={`https://wa.me/${recruiter.phone.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                          title="WhatsApp Recruiter"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Recruiter Email ID with Email button */}
+                    <div className="bg-white p-2.5 rounded-xl border border-gray-200 flex items-center justify-between gap-1 shadow-2xs">
+                      <div className="min-w-0">
+                        <span className="text-[10px] text-gray-400 block font-medium">Official Work Email</span>
+                        <span className="font-semibold text-gray-900 text-xs block truncate">
+                          {recruiter.email}
+                        </span>
+                      </div>
+                      <a
+                        href={`mailto:${recruiter.email}?subject=Inquiry%20regarding%20${encodeURIComponent(job.title)}%20role`}
+                        className="px-2 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-[11px] font-bold flex items-center gap-1 transition-colors flex-shrink-0"
+                        title="Email Recruiter"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Email</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 text-center">
+                    Verified through Jobs India Employer Trust & Safety Network
+                  </p>
+                </div>
+              </section>
+            );
+          })()}
         </div>
 
         {/* BOTTOM STICKY BUTTONS ("Save Job" and "Apply Now") */}

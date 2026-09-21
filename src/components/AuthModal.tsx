@@ -23,6 +23,8 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: 'login' | 'signup';
+  adminPassword?: string;
+  onOpenAdminResetPassword?: () => void;
   onLoginSuccess: (
     mode: AppMode,
     userName: string,
@@ -70,10 +72,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   initialTab = 'signup',
+  adminPassword,
+  onOpenAdminResetPassword,
   onLoginSuccess,
 }) => {
   const [tab, setTab] = useState<'login' | 'signup'>(initialTab);
   const [accountType, setAccountType] = useState<'job-seeker' | 'employer' | 'admin'>('job-seeker');
+  const [resetFeedback, setResetFeedback] = useState<string | null>(null);
 
   // Job Seeker Signup Fields
   const [seekerFullName, setSeekerFullName] = useState('');
@@ -226,6 +231,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
     if (!loginPassword) {
       setErrorMessage('Please enter your password');
+      return;
+    }
+
+    // Admin security validation
+    if (accountType === 'admin' && adminPassword && loginPassword !== adminPassword) {
+      setErrorMessage(`Incorrect Admin Password! (Default: ${adminPassword}). Click "Forgot password?" to reset.`);
       return;
     }
 
@@ -963,12 +974,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </label>
                     <button
                       type="button"
-                      onClick={() => alert('Password reset link sent to registered email!')}
+                      onClick={() => {
+                        if (accountType === 'admin') {
+                          onClose();
+                          onOpenAdminResetPassword?.();
+                        } else {
+                          setResetFeedback('A secure reset link has been dispatched to your email/phone.');
+                          setTimeout(() => setResetFeedback(null), 4000);
+                        }
+                      }}
                       className="text-[11px] text-[#10B981] hover:underline"
                     >
-                      Forgot password?
+                      {accountType === 'admin' ? 'Reset Admin Password?' : 'Forgot password?'}
                     </button>
                   </div>
+                  {resetFeedback && (
+                    <div className="mb-2 p-2 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-[11px] text-emerald-300 flex items-center gap-1.5 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                      <span>{resetFeedback}</span>
+                    </div>
+                  )}
+                  {accountType === 'admin' && adminPassword && (
+                    <div className="mb-2 p-2 bg-purple-950/60 border border-purple-800/60 rounded-xl text-[11px] text-purple-200 flex items-center justify-between gap-1">
+                      <span>Active Admin Password: <b>{adminPassword}</b></span>
+                      <button
+                        type="button"
+                        onClick={() => setLoginPassword(adminPassword)}
+                        className="text-[10px] text-purple-300 hover:text-white bg-purple-700/50 px-1.5 py-0.5 rounded font-bold"
+                      >
+                        Auto-fill
+                      </button>
+                    </div>
+                  )}
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input

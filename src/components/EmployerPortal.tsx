@@ -12,8 +12,13 @@ import {
   X,
   Sparkles,
   Search,
+  User,
+  Phone,
+  Mail,
+  UserCheck,
 } from 'lucide-react';
 import { Job, Application } from '../types';
+import { getJobRecruiter } from '../data/mockJobs';
 
 interface EmployerPortalProps {
   jobs: Job[];
@@ -44,6 +49,12 @@ export const EmployerPortal: React.FC<EmployerPortalProps> = ({
   const [experience, setExperience] = useState('1 - 3 Yrs');
   const [skills, setSkills] = useState('Nursing, Patient Care, ICU Support');
   const [description, setDescription] = useState('Looking for dedicated professionals to join our expanding clinical team in Patna.');
+  
+  // Recruiter Contact Details
+  const [hrName, setHrName] = useState('Dr. Alok Verma');
+  const [hrDesignation, setHrDesignation] = useState('Senior Talent Acquisition Lead');
+  const [hrPhone, setHrPhone] = useState('+91 98350 12845');
+  const [hrEmail, setHrEmail] = useState('hr.alok@apollodiagnostics.in');
 
   const handlePostJob = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +96,16 @@ export const EmployerPortal: React.FC<EmployerPortalProps> = ({
         industry: 'Healthcare & Clinical Services',
         address: `${locality}, Patna, Bihar`,
         verified: true,
+      },
+      recruiterContact: {
+        name: hrName.trim() || 'Dr. Alok Verma',
+        designation: hrDesignation.trim() || 'Senior Talent Partner',
+        phone: hrPhone.trim() || '+91 98350 12845',
+        email: hrEmail.trim() || 'recruiter@apollodiagnostics.in',
+        isVerified: true,
+        kycDocument: 'CIN-U85110DL2004PLC128314',
+        companyGstin: '10AAACM1234F1Z8',
+        verifiedAt: 'Verified Just Now',
       },
     };
 
@@ -239,6 +260,35 @@ export const EmployerPortal: React.FC<EmployerPortalProps> = ({
                       {job.applicantsCount || 8} applicants
                     </span>
                   </div>
+
+                  {/* Recruiter / HR Contact Details */}
+                  {(() => {
+                    const recruiter = getJobRecruiter(job);
+                    return (
+                      <div className="bg-[#F8FAFC] border border-gray-200/80 rounded-xl p-2.5 text-xs space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-[#1E2544] flex items-center gap-1">
+                            <User className="w-3.5 h-3.5 text-purple-600" />
+                            <span>HR Recruiter: {recruiter.name}</span>
+                            <span className="text-gray-400 font-normal">({recruiter.designation})</span>
+                          </span>
+                          <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
+                            Verified
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
+                          <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                            <Phone className="w-3 h-3 text-emerald-600" />
+                            {recruiter.phone}
+                          </span>
+                          <span className="flex items-center gap-1 text-blue-700 font-medium">
+                            <Mail className="w-3 h-3 text-blue-600" />
+                            {recruiter.email}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -379,6 +429,68 @@ export const EmployerPortal: React.FC<EmployerPortalProps> = ({
                   placeholder="e.g. ICU Care, Vital Monitoring, GNM"
                   className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs"
                 />
+              </div>
+
+              {/* Recruiter / HR Contact Details (Name, Mobile No, Email ID) */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#EEF2FF] space-y-3">
+                <span className="text-xs font-bold text-[#1E2544] flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-[#4055B8]" />
+                  <span>HR / Recruiter Verification Details</span>
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      HR Contact Person Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={hrName}
+                      onChange={(e) => setHrName(e.target.value)}
+                      placeholder="e.g. Dr. Alok Verma"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-hidden focus:border-[#4055B8]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      HR Designation / Role
+                    </label>
+                    <input
+                      type="text"
+                      value={hrDesignation}
+                      onChange={(e) => setHrDesignation(e.target.value)}
+                      placeholder="e.g. Senior Talent Lead"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      Official Mobile No (WhatsApp updates) *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={hrPhone}
+                      onChange={(e) => setHrPhone(e.target.value)}
+                      placeholder="+91 98350 12845"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-medium text-emerald-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      Official Work Email ID *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={hrEmail}
+                      onChange={(e) => setHrEmail(e.target.value)}
+                      placeholder="hr.alok@hospital.com"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-medium text-blue-700"
+                    />
+                  </div>
+                </div>
               </div>
 
               <button

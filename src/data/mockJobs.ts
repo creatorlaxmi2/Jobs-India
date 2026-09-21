@@ -1,4 +1,101 @@
-import { Job } from '../types';
+import { Job, RecruiterContact } from '../types';
+
+export function getJobRecruiter(job: Job): RecruiterContact {
+  if (job.recruiterContact) {
+    return job.recruiterContact;
+  }
+  const isMedanta = job.company.includes('Medanta');
+  const isRuban = job.company.includes('Ruban');
+  const isBajaj = job.company.includes('Bajaj');
+  const isFlipkart = job.company.includes('Flipkart');
+  const isReliance = job.company.includes('Reliance');
+  const isApollo = job.company.includes('Apollo');
+
+  if (isMedanta) {
+    return {
+      name: 'Dr. Alok Verma',
+      designation: 'Senior Talent Acquisition Lead',
+      phone: '+91 98350 12845',
+      email: 'alok.verma@medanta.org',
+      isVerified: true,
+      kycDocument: 'CIN-U85110DL2004PLC128314',
+      companyGstin: '10AAACM1234F1Z8',
+      verifiedAt: 'Verified on 15 Sep 2026',
+    };
+  }
+  if (isRuban) {
+    return {
+      name: 'Pooja Sharma',
+      designation: 'Head HR & Clinical Staffing',
+      phone: '+91 94710 44820',
+      email: 'hr.pooja@rubanhospital.com',
+      isVerified: true,
+      kycDocument: 'PAN-AAACR1294K',
+      companyGstin: '10AAACR1294K1Z2',
+      verifiedAt: 'Verified on 18 Sep 2026',
+    };
+  }
+  if (isBajaj) {
+    return {
+      name: 'Vikash Kumar Mishra',
+      designation: 'Regional HR Manager - Bihar Circle',
+      phone: '+91 99342 55910',
+      email: 'vikash.mishra@bajajfinserv.in',
+      isVerified: true,
+      kycDocument: 'CIN-L65923PN2007PLC130075',
+      companyGstin: '10AAACB1845P1Z7',
+      verifiedAt: 'Verified on 12 Sep 2026',
+    };
+  }
+  if (isFlipkart) {
+    return {
+      name: 'Neha Kumari',
+      designation: 'Talent Partner - Patna Hub',
+      phone: '+91 91223 88102',
+      email: 'neha.kumari@flipkartcareers.in',
+      isVerified: true,
+      kycDocument: 'CIN-U51109KA2012PTC066107',
+      companyGstin: '10AAACF8812D1ZX',
+      verifiedAt: 'Verified on 14 Sep 2026',
+    };
+  }
+  if (isReliance) {
+    return {
+      name: 'Amitabh Sen',
+      designation: 'Operations HR Executive',
+      phone: '+91 93045 77619',
+      email: 'amitabh.sen@ril.com',
+      isVerified: true,
+      kycDocument: 'CIN-L17110MH1973PLC019786',
+      companyGstin: '10AAACR7110M1Z3',
+      verifiedAt: 'Verified on 10 Sep 2026',
+    };
+  }
+  if (isApollo) {
+    return {
+      name: 'Dr. Sunita Rao',
+      designation: 'Chief Medical HR Officer',
+      phone: '+91 98351 90234',
+      email: 'hr.patna@apollohospitals.com',
+      isVerified: true,
+      kycDocument: 'CIN-L85110TN1979PLC008035',
+      companyGstin: '10AAACA0124P1Z9',
+      verifiedAt: 'Verified on 19 Sep 2026',
+    };
+  }
+
+  const cleanComp = job.company.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return {
+    name: 'Saurav Banerjee',
+    designation: 'Talent Acquisition & HR Lead',
+    phone: '+91 98355 67120',
+    email: `careers@${cleanComp.slice(0, 10)}.in`,
+    isVerified: job.aboutCompany?.verified ?? true,
+    kycDocument: 'CIN-U74999BR2019PTC041235',
+    companyGstin: '10AAACT4999B1Z5',
+    verifiedAt: 'Verified on 16 Sep 2026',
+  };
+}
 
 export const INITIAL_JOBS: Job[] = [
   {

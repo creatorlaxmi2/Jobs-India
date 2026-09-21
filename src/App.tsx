@@ -30,6 +30,7 @@ import { NotificationsModal } from './components/NotificationsModal';
 import { ReferModal } from './components/ReferModal';
 import { SwitchModeModal } from './components/SwitchModeModal';
 import { AuthModal } from './components/AuthModal';
+import { AdminAuthModal } from './components/AdminAuthModal';
 import { EmployerPortal } from './components/EmployerPortal';
 import { AdminPortal } from './components/AdminPortal';
 import { Sparkles, CheckCircle2 } from 'lucide-react';
@@ -81,7 +82,24 @@ export default function App() {
   const [authInitialTab, setAuthInitialTab] = useState<'login' | 'signup'>('login');
   const [modeToast, setModeToast] = useState<string | null>(null);
 
+  // Admin Panel Login Password & Security State
+  const [adminPassword, setAdminPassword] = useState<string>(() => {
+    return localStorage.getItem('jobs_india_admin_password') || 'admin@123';
+  });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('jobs_india_admin_auth') === 'true';
+  });
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
+  const [adminAuthInitialView, setAdminAuthInitialView] = useState<'login' | 'reset'>('login');
+
   const handleSelectMode = (mode: AppMode) => {
+    // Require password authentication for Admin Panel
+    if (mode === 'admin' && !isAdminAuthenticated) {
+      setAdminAuthInitialView('login');
+      setIsAdminAuthModalOpen(true);
+      return;
+    }
+
     setCurrentMode(mode);
     const label =
       mode === 'employer'
@@ -91,6 +109,34 @@ export default function App() {
         : 'Switched to Job Seeker Mode';
     setModeToast(label);
     setTimeout(() => setModeToast(null), 3000);
+  };
+
+  const handleOpenAdminAuth = (initialView: 'login' | 'reset' = 'login') => {
+    setAdminAuthInitialView(initialView);
+    setIsAdminAuthModalOpen(true);
+  };
+
+  const handleAdminLoginSuccess = () => {
+    setIsAdminAuthenticated(true);
+    localStorage.setItem('jobs_india_admin_auth', 'true');
+    setCurrentMode('admin');
+    setModeToast('Super Admin Authenticated • Welcome to Admin Moderation Panel');
+    setTimeout(() => setModeToast(null), 3500);
+  };
+
+  const handleLockAdminSession = () => {
+    setIsAdminAuthenticated(false);
+    localStorage.removeItem('jobs_india_admin_auth');
+    setCurrentMode('job-seeker');
+    setModeToast('Admin Session Locked • Switched to Job Seeker Mode');
+    setTimeout(() => setModeToast(null), 3500);
+  };
+
+  const handleUpdateAdminPassword = (newPassword: string) => {
+    setAdminPassword(newPassword);
+    localStorage.setItem('jobs_india_admin_password', newPassword);
+    setModeToast('Admin Password Successfully Updated & Saved!');
+    setTimeout(() => setModeToast(null), 3500);
   };
 
   const handleOpenAuth = (tab: 'login' | 'signup') => {
@@ -109,6 +155,10 @@ export default function App() {
       city?: string;
     }
   ) => {
+    if (mode === 'admin') {
+      setIsAdminAuthenticated(true);
+      localStorage.setItem('jobs_india_admin_auth', 'true');
+    }
     setCurrentMode(mode);
     setUserProfile((prev) => ({
       ...prev,
@@ -126,9 +176,20 @@ export default function App() {
 
   const handleVerifyJob = (jobId: string) => {
     setJobs((prev) =>
-      prev.map((j) =>
-        j.id === jobId ? { ...j, aboutCompany: { ...j.aboutCompany, verified: true } } : j
-      )
+      prev.map((j) => {
+        if (j.id !== jobId) return j;
+        return {
+          ...j,
+          aboutCompany: { ...j.aboutCompany, verified: true },
+          recruiterContact: j.recruiterContact
+            ? {
+                ...j.recruiterContact,
+                isVerified: true,
+                verifiedAt: 'Verified by Admin Just Now',
+              }
+            : undefined,
+        };
+      })
     );
   };
 
@@ -295,6 +356,8 @@ export default function App() {
           onVerifyJob={handleVerifyJob}
           onRemoveJob={handleRemoveJob}
           onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+          onOpenAdminSecurity={handleOpenAdminAuth}
+          onLockAdminSession={handleLockAdminSession}
         />
       ) : (
         <>
@@ -417,6 +480,8 @@ export default function App() {
         currentMode={currentMode}
         onSelectMode={handleSelectMode}
         onOpenAuth={handleOpenAuth}
+        isAdminAuthenticated={isAdminAuthenticated}
+        onOpenAdminAuth={handleOpenAdminAuth}
       />
 
       {/* AUTH MODAL (Login / Signup for Seeker, Employer & Admin) */}
@@ -424,7 +489,19 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         initialTab={authInitialTab}
+        adminPassword={adminPassword}
+        onOpenAdminResetPassword={() => handleOpenAdminAuth('reset')}
         onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* DEDICATED ADMIN AUTH & RESET PASSWORD MODAL */}
+      <AdminAuthModal
+        isOpen={isAdminAuthModalOpen}
+        onClose={() => setIsAdminAuthModalOpen(false)}
+        adminPassword={adminPassword}
+        onUpdateAdminPassword={handleUpdateAdminPassword}
+        onLoginSuccess={handleAdminLoginSuccess}
+        initialView={adminAuthInitialView}
       />
 
       {/* JOB DETAILS MODAL */}
