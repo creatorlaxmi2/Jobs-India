@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { MapPin, ChevronDown, Heart, Bell, Share2, Check } from 'lucide-react';
+import { MapPin, ChevronDown, Heart, Bell, Share2, Check, User, Briefcase, Shield } from 'lucide-react';
 import { JobsIndiaLogo } from './JobsIndiaLogo';
+import { AppMode } from '../types';
 
 interface HeaderProps {
   currentCity: string;
@@ -11,6 +12,8 @@ interface HeaderProps {
   onOpenNotifications: () => void;
   onOpenSavedJobs: () => void;
   onOpenReferModal: () => void;
+  currentMode: AppMode;
+  onOpenSwitchMode: () => void;
 }
 
 const AVAILABLE_LOCATIONS = [
@@ -35,6 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onOpenSavedJobs,
   onOpenReferModal,
+  currentMode,
+  onOpenSwitchMode,
 }) => {
   const [showLocationModal, setShowLocationModal] = useState(false);
 
@@ -42,39 +47,69 @@ export const Header: React.FC<HeaderProps> = ({
     <>
       <header
         id="jobs-india-header"
-        className="sticky top-0 z-30 bg-white border-b border-[#E5E7EB] px-4 py-2.5 shadow-xs"
+        className="sticky top-0 z-30 bg-white border-b border-[#E5E7EB] px-3.5 py-2 shadow-xs"
       >
         <div className="flex items-center justify-between gap-2">
           {/* Left: Location Selector with Patna & Muhammadpur */}
           <button
             id="header-location-selector-btn"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-2 text-left group hover:opacity-90 transition-opacity focus:outline-hidden py-1 max-w-[55%]"
+            className="flex items-center gap-2 text-left group hover:opacity-90 transition-opacity focus:outline-hidden py-0.5 max-w-[48%]"
           >
             <div className="w-8 h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#4055B8] flex-shrink-0 group-hover:bg-[#E0E7FF] transition-colors">
               <MapPin className="w-4 h-4 text-[#4055B8]" />
             </div>
             <div className="flex flex-col leading-tight truncate">
               <div className="flex items-center gap-1">
-                <span className="font-bold text-[#1E2544] text-[15px] tracking-tight">
+                <span className="font-bold text-[#1E2544] text-[14px] tracking-tight">
                   {currentCity}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-[#687386] transition-transform group-hover:translate-y-0.5" />
               </div>
-              <span className="text-xs text-[#687386] truncate max-w-[130px]">
+              <span className="text-[11px] text-[#687386] truncate max-w-[110px]">
                 {currentLocality}
               </span>
             </div>
           </button>
 
-          {/* Right: Refer, Saved Hearts, Notification Bell */}
+          {/* Right: Switch Mode Button, Refer, Saved Hearts, Notification Bell */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* Switch App Mode Trigger Button */}
+            <button
+              id="header-switch-mode-btn"
+              onClick={onOpenSwitchMode}
+              title="Switch App Mode (Job Seeker / Employer / Admin)"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs border ${
+                currentMode === 'employer'
+                  ? 'bg-[#FEF3C7] text-[#92400E] border-[#F59E0B]/50 hover:bg-[#FDE68A]'
+                  : currentMode === 'admin'
+                  ? 'bg-[#F3E8FF] text-[#6B21A8] border-[#A855F7]/50 hover:bg-[#E9D5FF]'
+                  : 'bg-[#ECFDF5] text-[#065F46] border-[#10B981]/40 hover:bg-[#D1FAE5]'
+              }`}
+            >
+              {currentMode === 'employer' ? (
+                <Briefcase className="w-3.5 h-3.5 text-[#F59E0B] flex-shrink-0" />
+              ) : currentMode === 'admin' ? (
+                <Shield className="w-3.5 h-3.5 text-[#A855F7] flex-shrink-0" />
+              ) : (
+                <User className="w-3.5 h-3.5 text-[#10B981] flex-shrink-0" />
+              )}
+              <span className="text-[11px] font-extrabold tracking-tight">
+                {currentMode === 'employer'
+                  ? 'Employer'
+                  : currentMode === 'admin'
+                  ? 'Admin'
+                  : 'Seeker'}
+              </span>
+              <ChevronDown className="w-3 h-3 opacity-60" />
+            </button>
+
             {/* Refer button with WhatsApp-style icon */}
             <button
               id="header-refer-whatsapp-btn"
               onClick={onOpenReferModal}
               title="Refer & Earn on WhatsApp"
-              className="flex items-center gap-1 bg-[#25D366]/10 text-[#0F8A43] hover:bg-[#25D366]/20 px-2.5 py-1.5 rounded-full text-xs font-bold transition-colors"
+              className="flex items-center gap-1 bg-[#25D366]/10 text-[#0F8A43] hover:bg-[#25D366]/20 px-2 py-1.5 rounded-full text-xs font-bold transition-colors"
             >
               {/* WhatsApp styled icon */}
               <svg

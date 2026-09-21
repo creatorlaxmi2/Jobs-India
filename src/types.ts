@@ -1,5 +1,7 @@
 export type TabType = 'home' | 'all-jobs' | 'activity' | 'premium' | 'profile';
 
+export type AppMode = 'job-seeker' | 'employer' | 'admin';
+
 export type JobType = 'Full Time' | 'Part Time' | 'Work From Home' | 'Internship';
 
 export interface Job {

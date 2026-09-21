@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   TabType,
+  AppMode,
   Job,
   UserProfile,
   Application,
@@ -27,6 +28,11 @@ import { JobDetailsModal } from './components/JobDetailsModal';
 import { ApplyModal } from './components/ApplyModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { ReferModal } from './components/ReferModal';
+import { SwitchModeModal } from './components/SwitchModeModal';
+import { AuthModal } from './components/AuthModal';
+import { EmployerPortal } from './components/EmployerPortal';
+import { AdminPortal } from './components/AdminPortal';
+import { Sparkles, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   // Navigation
@@ -67,6 +73,74 @@ export default function App() {
   const [selectedJobForApply, setSelectedJobForApply] = useState<Job | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isReferOpen, setIsReferOpen] = useState(false);
+
+  // App Mode & Auth State (Job Seeker / Employer / Admin)
+  const [currentMode, setCurrentMode] = useState<AppMode>('job-seeker');
+  const [isSwitchModeOpen, setIsSwitchModeOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authInitialTab, setAuthInitialTab] = useState<'login' | 'signup'>('login');
+  const [modeToast, setModeToast] = useState<string | null>(null);
+
+  const handleSelectMode = (mode: AppMode) => {
+    setCurrentMode(mode);
+    const label =
+      mode === 'employer'
+        ? 'Switched to Employer / HR Mode'
+        : mode === 'admin'
+        ? 'Switched to Admin Moderation Panel'
+        : 'Switched to Job Seeker Mode';
+    setModeToast(label);
+    setTimeout(() => setModeToast(null), 3000);
+  };
+
+  const handleOpenAuth = (tab: 'login' | 'signup') => {
+    setAuthInitialTab(tab);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleLoginSuccess = (
+    mode: AppMode,
+    userName: string,
+    details?: {
+      email?: string;
+      phone?: string;
+      companyName?: string;
+      designation?: string;
+      city?: string;
+    }
+  ) => {
+    setCurrentMode(mode);
+    setUserProfile((prev) => ({
+      ...prev,
+      name: userName,
+      email: details?.email || prev.email,
+      phone: details?.phone || prev.phone,
+      city: details?.city ? details.city.split(',')[0].trim() : prev.city,
+    }));
+    const label = `Logged in as ${userName} (${
+      mode === 'employer' ? 'Employer / HR' : mode === 'admin' ? 'Admin' : 'Job Seeker'
+    })`;
+    setModeToast(label);
+    setTimeout(() => setModeToast(null), 3500);
+  };
+
+  const handleVerifyJob = (jobId: string) => {
+    setJobs((prev) =>
+      prev.map((j) =>
+        j.id === jobId ? { ...j, aboutCompany: { ...j.aboutCompany, verified: true } } : j
+      )
+    );
+  };
+
+  const handleRemoveJob = (jobId: string) => {
+    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+  };
+
+  const handleUpdateApplicationStatus = (appId: string, status: any) => {
+    setApplications((prev) =>
+      prev.map((a) => (a.id === appId ? { ...a, status } : a))
+    );
+  };
 
   // Toggle Save Job
   const handleToggleSave = (jobId: string) => {
@@ -195,99 +269,162 @@ export default function App() {
 
   return (
     <AndroidFrame>
-      {/* Top Header (Patna/Muhammadpur, WhatsApp Refer, Heart, Bell) */}
-      <Header
-        currentCity={currentCity}
-        currentLocality={currentLocality}
-        onSelectLocation={(city, locality) => {
-          setCurrentCity(city);
-          setCurrentLocality(locality);
-        }}
-        savedJobsCount={savedJobIds.size}
-        unreadNotificationsCount={unreadNotifsCount}
-        onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenSavedJobs={() => {
-          setActiveTab('activity');
-          setActivitySubView('saved');
-        }}
-        onOpenReferModal={() => setIsReferOpen(true)}
-      />
+      {/* Toast Alert for mode switch */}
+      {modeToast && (
+        <div
+          id="mode-toast-notification"
+          className="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-[#1E2544] text-white px-4 py-2 rounded-full shadow-xl border border-white/20 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200"
+        >
+          <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
+          <span>{modeToast}</span>
+        </div>
+      )}
 
-      {/* Main Tab Views */}
-      <main className="min-h-[calc(100vh-120px)]">
-        {activeTab === 'home' && (
-          <HomeTab
-            jobs={jobs}
-            savedJobIds={savedJobIds}
-            onToggleSave={handleToggleSave}
-            onApplyJob={(job) => setSelectedJobForApply(job)}
-            onSelectJob={(job) => setSelectedJobForDetails(job)}
-            onNavigateTab={(tab) => {
+      {/* Render Mode Views */}
+      {currentMode === 'employer' ? (
+        <EmployerPortal
+          jobs={jobs}
+          onAddJob={(newJob) => setJobs((prev) => [newJob, ...prev])}
+          applications={applications}
+          onUpdateApplicationStatus={handleUpdateApplicationStatus}
+          onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+        />
+      ) : currentMode === 'admin' ? (
+        <AdminPortal
+          jobs={jobs}
+          onVerifyJob={handleVerifyJob}
+          onRemoveJob={handleRemoveJob}
+          onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+        />
+      ) : (
+        <>
+          {/* Top Header (Patna/Muhammadpur, Switch Mode Button, WhatsApp Refer, Heart, Bell) */}
+          <Header
+            currentCity={currentCity}
+            currentLocality={currentLocality}
+            onSelectLocation={(city, locality) => {
+              setCurrentCity(city);
+              setCurrentLocality(locality);
+            }}
+            savedJobsCount={savedJobIds.size}
+            unreadNotificationsCount={unreadNotifsCount}
+            onOpenNotifications={() => setIsNotificationsOpen(true)}
+            onOpenSavedJobs={() => {
+              setActiveTab('activity');
+              setActivitySubView('saved');
+            }}
+            onOpenReferModal={() => setIsReferOpen(true)}
+            currentMode={currentMode}
+            onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+          />
+
+          {/* Main Tab Views */}
+          <main className="min-h-[calc(100vh-120px)]">
+            {activeTab === 'home' && (
+              <HomeTab
+                jobs={jobs}
+                savedJobIds={savedJobIds}
+                onToggleSave={handleToggleSave}
+                onApplyJob={(job) => setSelectedJobForApply(job)}
+                onSelectJob={(job) => setSelectedJobForDetails(job)}
+                onNavigateTab={(tab) => {
+                  setActiveTab(tab);
+                  setActivitySubView(null);
+                }}
+                onApplyQuickFilter={handleApplyQuickFilter}
+                searchQuery={homeSearchQuery}
+                onSearchChange={setHomeSearchQuery}
+                onSearchSubmit={handleSearchSubmit}
+                onOpenProfile={() => setActiveTab('profile')}
+              />
+            )}
+
+            {activeTab === 'all-jobs' && (
+              <AllJobsTab
+                jobs={jobs}
+                savedJobIds={savedJobIds}
+                onToggleSave={handleToggleSave}
+                onApplyJob={(job) => setSelectedJobForApply(job)}
+                onSelectJob={(job) => setSelectedJobForDetails(job)}
+                currentCity={currentCity}
+                currentLocality={currentLocality}
+                initialFilter={activeQuickFilter}
+              />
+            )}
+
+            {activeTab === 'activity' && (
+              <MyActivityTab
+                applications={applications}
+                hrRequests={hrRequests}
+                savedJobs={savedJobsList}
+                savedJobIds={savedJobIds}
+                onToggleSave={handleToggleSave}
+                onApplyJob={(job) => setSelectedJobForApply(job)}
+                onSelectJob={(job) => setSelectedJobForDetails(job)}
+                jobPreference={jobPreference}
+                onUpdateJobPreference={setJobPreference}
+                onAcceptHRRequest={handleAcceptHRRequest}
+                onDeclineHRRequest={handleDeclineHRRequest}
+                initialSubView={activitySubView}
+              />
+            )}
+
+            {activeTab === 'premium' && (
+              <PremiumTab
+                isPremiumUser={isPremiumUser}
+                onUpgradePremium={() => setIsPremiumUser(true)}
+              />
+            )}
+
+            {activeTab === 'profile' && (
+              <ProfileTab
+                profile={userProfile}
+                onUpdateProfile={setUserProfile}
+                onNavigateToPremium={() => setActiveTab('premium')}
+                onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+                onOpenAuth={handleOpenAuth}
+              />
+            )}
+          </main>
+
+          {/* Floating Switch Mode Button for Quick Access */}
+          <button
+            id="floating-switch-mode-btn"
+            onClick={() => setIsSwitchModeOpen(true)}
+            className="fixed bottom-20 right-4 z-40 bg-[#141A28] text-white px-3.5 py-2 rounded-full shadow-2xl border border-slate-700/80 hover:bg-[#1E273D] hover:scale-105 transition-all flex items-center gap-1.5 text-xs font-bold select-none cursor-pointer"
+            title="Switch App Mode"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
+            <span>Switch Mode</span>
+          </button>
+
+          {/* Fixed 5-Tab Bottom Navigation (Home, All Jobs, My Activity, Premium, Profile) */}
+          <BottomNav
+            activeTab={activeTab}
+            onSelectTab={(tab) => {
               setActiveTab(tab);
               setActivitySubView(null);
             }}
-            onApplyQuickFilter={handleApplyQuickFilter}
-            searchQuery={homeSearchQuery}
-            onSearchChange={setHomeSearchQuery}
-            onSearchSubmit={handleSearchSubmit}
-            onOpenProfile={() => setActiveTab('profile')}
+            activityBadgeCount={pendingHRCount}
           />
-        )}
+        </>
+      )}
 
-        {activeTab === 'all-jobs' && (
-          <AllJobsTab
-            jobs={jobs}
-            savedJobIds={savedJobIds}
-            onToggleSave={handleToggleSave}
-            onApplyJob={(job) => setSelectedJobForApply(job)}
-            onSelectJob={(job) => setSelectedJobForDetails(job)}
-            currentCity={currentCity}
-            currentLocality={currentLocality}
-            initialFilter={activeQuickFilter}
-          />
-        )}
+      {/* SWITCH APP MODE MODAL (Job Seeker / Employer / Admin / Log In / Sign Up) */}
+      <SwitchModeModal
+        isOpen={isSwitchModeOpen}
+        onClose={() => setIsSwitchModeOpen(false)}
+        currentMode={currentMode}
+        onSelectMode={handleSelectMode}
+        onOpenAuth={handleOpenAuth}
+      />
 
-        {activeTab === 'activity' && (
-          <MyActivityTab
-            applications={applications}
-            hrRequests={hrRequests}
-            savedJobs={savedJobsList}
-            savedJobIds={savedJobIds}
-            onToggleSave={handleToggleSave}
-            onApplyJob={(job) => setSelectedJobForApply(job)}
-            onSelectJob={(job) => setSelectedJobForDetails(job)}
-            jobPreference={jobPreference}
-            onUpdateJobPreference={setJobPreference}
-            onAcceptHRRequest={handleAcceptHRRequest}
-            onDeclineHRRequest={handleDeclineHRRequest}
-            initialSubView={activitySubView}
-          />
-        )}
-
-        {activeTab === 'premium' && (
-          <PremiumTab
-            isPremiumUser={isPremiumUser}
-            onUpgradePremium={() => setIsPremiumUser(true)}
-          />
-        )}
-
-        {activeTab === 'profile' && (
-          <ProfileTab
-            profile={userProfile}
-            onUpdateProfile={setUserProfile}
-            onNavigateToPremium={() => setActiveTab('premium')}
-          />
-        )}
-      </main>
-
-      {/* Fixed 5-Tab Bottom Navigation (Home, All Jobs, My Activity, Premium, Profile) */}
-      <BottomNav
-        activeTab={activeTab}
-        onSelectTab={(tab) => {
-          setActiveTab(tab);
-          setActivitySubView(null);
-        }}
-        activityBadgeCount={pendingHRCount}
+      {/* AUTH MODAL (Login / Signup for Seeker, Employer & Admin) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialTab={authInitialTab}
+        onLoginSuccess={handleLoginSuccess}
       />
 
       {/* JOB DETAILS MODAL */}

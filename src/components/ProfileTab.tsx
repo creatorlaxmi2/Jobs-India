@@ -23,12 +23,16 @@ interface ProfileTabProps {
   profile: UserProfile;
   onUpdateProfile: (updated: UserProfile) => void;
   onNavigateToPremium: () => void;
+  onOpenSwitchMode?: () => void;
+  onOpenAuth?: (tab: 'login' | 'signup') => void;
 }
 
 export const ProfileTab: React.FC<ProfileTabProps> = ({
   profile,
   onUpdateProfile,
   onNavigateToPremium,
+  onOpenSwitchMode,
+  onOpenAuth,
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState<UserProfile>({ ...profile });
@@ -134,6 +138,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               <h2 className="text-base font-bold text-[#1E2544] leading-tight">
                 {profile.name}
               </h2>
+              {profile.email && (
+                <p className="text-xs font-semibold text-[#4055B8] flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-[#4055B8]" />
+                  <span>{profile.email}</span>
+                </p>
+              )}
               <p className="text-xs font-semibold text-[#687386] flex items-center gap-1">
                 <Phone className="w-3 h-3 text-gray-400" />
                 <span>{profile.phone}</span>
@@ -337,6 +347,71 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           View Plans
         </button>
       </div>
+
+      {/* App Mode Switcher Action Card */}
+      {onOpenSwitchMode && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-[#4055B8]">
+              <Sparkles className="w-5 h-5 text-[#4055B8]" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-[#1E2544]">
+                Switch App Mode / Recruiter Portal
+              </h4>
+              <p className="text-[11px] text-gray-500">
+                Post jobs as HR employer or access admin panel
+              </p>
+            </div>
+          </div>
+          <button
+            id="profile-switch-mode-btn"
+            onClick={onOpenSwitchMode}
+            className="px-3 py-1.5 rounded-xl bg-[#4055B8] hover:bg-[#34459C] text-white text-xs font-bold shadow-xs transition-colors flex items-center gap-1"
+          >
+            <span>Switch</span>
+            <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
+      {/* Jobs Help Email Account Card */}
+      {onOpenAuth && (
+        <div className="bg-[#0F172A] rounded-2xl border border-slate-700/80 p-4 shadow-sm flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-[#064E3B] font-black text-sm flex-shrink-0 shadow-xs">
+              JH
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span>Jobs Help Account</span>
+                <span className="text-[10px] bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 font-bold px-1.5 py-0.2 rounded-full">
+                  Verified
+                </span>
+              </h4>
+              <p className="text-[11px] text-slate-400">
+                Job Seeker & Employer / HR full details signup
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              id="profile-signup-btn"
+              onClick={() => onOpenAuth('signup')}
+              className="px-3 py-1.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#022c22] text-xs font-extrabold shadow-sm transition-colors"
+            >
+              Sign Up
+            </button>
+            <button
+              id="profile-login-btn"
+              onClick={() => onOpenAuth('login')}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors"
+            >
+              Log In
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* FULL PROFILE EDITING MODAL */}
       {showEditModal && (

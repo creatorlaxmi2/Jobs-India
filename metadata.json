@@ -2,5 +2,7 @@
   "name": "Jobs India",
   "description": "Modern Indian mobile job-search application connecting job seekers with top verified employers across India.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
