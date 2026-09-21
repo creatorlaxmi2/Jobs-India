@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      // Ensure window.fetch has both getter and setter to prevent "Cannot set property fetch of #<Window> which has only a getter"
+      (function() {
+        try {
+          var originalFetch = typeof window !== 'undefined' && typeof window.fetch === 'function' ? window.fetch.bind(window) : undefined;
+          var _currentFetch = originalFetch;
+
+          try {
+            Object.defineProperty(window, 'fetch', {
+              configurable: true,
+              enumerable: true,
+              get: function() {
+                return _currentFetch;
+              },
+              set: function(val) {
+                _currentFetch = val;
+              }
+            });
+          } catch (e1) {}
+
+          try {
+            if (typeof Window !== 'undefined' && Window.prototype) {
+              var protoDesc = Object.getOwnPropertyDescriptor(Window.prototype, 'fetch');
+              if (!protoDesc || !protoDesc.set) {
+                Object.defineProperty(Window.prototype, 'fetch', {
+                  configurable: true,
+                  enumerable: true,
+                  get: function() {
+                    return this === window && _currentFetch ? _currentFetch : (protoDesc && protoDesc.get ? protoDesc.get.call(this) : _currentFetch);
+                  },
+                  set: function(val) {
+                    if (this === window) {
+                      _currentFetch = val;
+                    } else {
+                      try {
+                        Object.defineProperty(this, 'fetch', {
+                          configurable: true,
+                          enumerable: true,
+                          writable: true,
+                          value: val
+                        });
+                      } catch (e2) {}
+                    }
+                  }
+                });
+              }
+            }
+          } catch (e3) {}
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jobs India - Job Search App</title>
+    <meta name="description" content="Modern Indian mobile job-search application connecting job seekers with top verified employers across India." />
+    <meta property="og:title" content="Jobs India - Job Search App" />
+    <meta property="og:description" content="Modern Indian mobile job-search application connecting job seekers with top verified employers across India." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
