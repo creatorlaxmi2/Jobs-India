@@ -148,11 +148,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-[#10B981] flex items-center justify-center text-[#064E3B] font-black text-xs flex-shrink-0 shadow-xs">
-                JH
+                JI
               </div>
               <div className="min-w-0">
                 <h3 className="text-xs font-bold text-white truncate">
-                  Jobs Help Bihar Portal
+                  Jobs India Portal
                 </h3>
                 <p className="text-[11px] text-slate-300 truncate">
                   Log in or sign up to apply & connect with HRs

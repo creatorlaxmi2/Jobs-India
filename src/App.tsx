@@ -390,6 +390,15 @@ export default function App() {
             onSelectLocation={(city, locality) => {
               setCurrentCity(city);
               setCurrentLocality(locality);
+              setUserProfile((prev) => ({
+                ...prev,
+                city,
+                locality,
+              }));
+              setJobPreference((prev) => ({
+                ...prev,
+                preferredLocations: [locality, city],
+              }));
             }}
             savedJobsCount={savedJobIds.size}
             unreadNotificationsCount={unreadNotifsCount}
@@ -470,8 +479,15 @@ export default function App() {
             {activeTab === 'profile' && (
               <ProfileTab
                 profile={userProfile}
-                onUpdateProfile={setUserProfile}
+                onUpdateProfile={(updated) => {
+                  setUserProfile(updated);
+                  if (updated.city && updated.locality) {
+                    setCurrentCity(updated.city);
+                    setCurrentLocality(updated.locality);
+                  }
+                }}
                 onNavigateToPremium={() => setActiveTab('premium')}
+                onBackToHome={() => setActiveTab('home')}
                 onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
                 onOpenAuth={handleOpenAuth}
                 isLoggedIn={isLoggedIn}

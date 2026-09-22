@@ -25,8 +25,10 @@ import {
   MapPin,
   Phone,
   Mail,
+  Headphones,
 } from 'lucide-react';
 import { UserProfile, UserEducation, UserExperienceItem } from '../types';
+import { SUPPORT_CONTENT } from '../data/supportData';
 
 interface ProfileTabProps {
   profile: UserProfile;
@@ -73,6 +75,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const [newAssetInput, setNewAssetInput] = useState('');
   const [newCertInput, setNewCertInput] = useState('');
   const [showResumeViewer, setShowResumeViewer] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -86,8 +89,8 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
     if (navigator.share) {
       navigator
         .share({
-          title: `${profile.name} - Jobs Help Profile`,
-          text: `View ${profile.name}'s verified healthcare & nursing profile on Jobs Help India`,
+          title: `${profile.name} - Jobs India Profile`,
+          text: `View ${profile.name}'s verified healthcare & nursing profile on Jobs India Portal`,
           url: window.location.href,
         })
         .catch(() => {
@@ -943,16 +946,40 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             </div>
           )}
 
+          {/* Contact Support Help Card */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-3.5 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-blue-50 text-[#2A48C8] flex items-center justify-center flex-shrink-0">
+                <Headphones className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[#1E2544]">
+                  Contact Jobs India Support
+                </h4>
+                <p className="text-[11px] text-gray-500">
+                  WhatsApp, toll-free helpline, email & office address
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsSupportModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#2A48C8] text-xs font-bold transition-colors flex items-center gap-1"
+            >
+              <span>Support</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {/* Account Status Card */}
           {onOpenAuth && (
             <div className="bg-[#0F172A] rounded-2xl border border-slate-700/80 p-3.5 shadow-xs flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-[#10B981] flex items-center justify-center text-[#064E3B] font-black text-xs flex-shrink-0">
-                  JH
+                  JI
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span>Jobs Help Account</span>
+                    <span>Jobs India Account</span>
                     <span
                       className={`text-[9px] ${
                         isLoggedIn
@@ -1768,6 +1795,114 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Replace</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL: CONTACT SUPPORT DIALOG (Exact Match to support.jpg) */}
+      {isSupportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
+          <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 duration-200">
+            <div className="flex items-start justify-between pb-1">
+              <div>
+                <span className="text-[11px] font-bold text-[#2A48C8] uppercase tracking-wider block">
+                  SUPPORT
+                </span>
+                <h3 className="text-lg font-bold text-[#1E2544] mt-0.5">
+                  Contact Jobs India Support
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsSupportModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#687386] leading-relaxed">
+              We are here to help you get hired. Reach our team 7 days a week.
+            </p>
+
+            <div className="space-y-3 pt-1">
+              {/* Official WhatsApp Helpdesk */}
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs space-y-1">
+                <h4 className="text-sm font-bold text-[#1E2544]">
+                  Official WhatsApp Helpdesk
+                </h4>
+                <p className="text-xs text-[#525D73] leading-relaxed">
+                  +918863090950 (Mon - Sat: 9:00 AM to 7:00 PM IST)
+                </p>
+                <div className="pt-1.5">
+                  <a
+                    href="https://wa.me/918863090950?text=Hello%20Jobs%20India%20Support%2C%20I%20need%20help%20with%20my%20job%20application"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#10B981] hover:underline"
+                  >
+                    <span>Chat on WhatsApp (+91 8863090950)</span>
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Toll-Free Candidate Helpline */}
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs space-y-1">
+                <h4 className="text-sm font-bold text-[#1E2544]">
+                  Toll-Free Candidate Helpline
+                </h4>
+                <p className="text-xs text-[#525D73] leading-relaxed">
+                  1800-JOBS-INDIA (1800-562-7463) - Toll Free across India
+                </p>
+                <div className="pt-1.5">
+                  <a
+                    href="tel:18005627463"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2A48C8] hover:underline"
+                  >
+                    <span>Call Toll-Free (1800-562-7463)</span>
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Support Email */}
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs space-y-1">
+                <h4 className="text-sm font-bold text-[#1E2544]">
+                  Support Email
+                </h4>
+                <p className="text-xs text-[#525D73] leading-relaxed">
+                  support.jobsindia@gmail.com (Average response time: under 2 hours)
+                </p>
+                <div className="pt-1.5">
+                  <a
+                    href="mailto:support.jobsindia@gmail.com"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2A48C8] hover:underline"
+                  >
+                    <span>Send Email (support.jobsindia@gmail.com)</span>
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Corporate Office */}
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs space-y-1">
+                <h4 className="text-sm font-bold text-[#1E2544]">
+                  Corporate Office
+                </h4>
+                <p className="text-xs text-[#525D73] leading-relaxed">
+                  Jobs India Tech Labs, Level 4, Koiri tola Dr narayan babu Road, Patna, Bihar 800007
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setIsSupportModalOpen(false)}
+                className="w-full py-3 rounded-xl bg-[#3949AB] hover:bg-[#283593] text-white text-sm font-bold shadow-md transition-colors"
+              >
+                Got It, Thanks!
               </button>
             </div>
           </div>

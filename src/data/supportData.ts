@@ -96,7 +96,7 @@ export const SUPPORT_CONTENT: Record<string, SupportItem> = {
       },
       {
         title: 'Report Suspicious Recruiters',
-        content: 'If an HR representative asks for banking OTPs, payment, or behaves inappropriately, tap "Report Job" or reach out to safety@jobsindia.app immediately.'
+        content: 'If an HR representative asks for banking OTPs, payment, or behaves inappropriately, tap "Report Job" or reach out to support.jobsindia@gmail.com immediately.'
       }
     ]
   },
@@ -109,7 +109,7 @@ export const SUPPORT_CONTENT: Record<string, SupportItem> = {
     points: [
       {
         title: 'Official WhatsApp Helpdesk',
-        content: '+91 88002 99120 (Mon - Sat: 9:00 AM to 7:00 PM IST)'
+        content: '+918863090950 (Mon - Sat: 9:00 AM to 7:00 PM IST)'
       },
       {
         title: 'Toll-Free Candidate Helpline',
@@ -117,11 +117,11 @@ export const SUPPORT_CONTENT: Record<string, SupportItem> = {
       },
       {
         title: 'Support Email',
-        content: 'support@jobsindia.app (Average response time: under 2 hours)'
+        content: 'support.jobsindia@gmail.com (Average response time: under 2 hours)'
       },
       {
         title: 'Corporate Office',
-        content: 'Jobs India Tech Labs, Level 4, Tech Park, Frazer Road / Exhibition Road, Patna, Bihar 800001'
+        content: 'Jobs India Tech Labs, Level 4, Koiri tola Dr narayan babu Road, Patna, Bihar 800007'
       }
     ]
   },

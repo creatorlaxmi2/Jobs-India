@@ -105,27 +105,31 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
 
           {/* Option 3: Admin Panel (Password Protected) */}
           <div className="relative">
-            <button
-              id="mode-admin-btn"
-              onClick={() => {
-                if (isAdminAuthenticated) {
-                  onSelectMode('admin');
-                  onClose();
-                } else if (onOpenAdminAuth) {
-                  onClose();
-                  onOpenAdminAuth('login');
-                } else {
-                  onSelectMode('admin');
-                  onClose();
-                }
-              }}
+            <div
+              id="mode-admin-container"
               className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-left transition-all group ${
                 currentMode === 'admin'
                   ? 'bg-[#3B2C63] ring-1 ring-[#A855F7]/60'
                   : 'hover:bg-[#1C2438]'
               }`}
             >
-              <div className="flex items-center gap-3.5 min-w-0">
+              <button
+                type="button"
+                id="mode-admin-btn"
+                onClick={() => {
+                  if (isAdminAuthenticated) {
+                    onSelectMode('admin');
+                    onClose();
+                  } else if (onOpenAdminAuth) {
+                    onClose();
+                    onOpenAdminAuth('login');
+                  } else {
+                    onSelectMode('admin');
+                    onClose();
+                  }
+                }}
+                className="flex items-center gap-3.5 min-w-0 flex-1 text-left cursor-pointer"
+              >
                 <div className="flex-shrink-0">
                   <Shield className="w-5 h-5 text-[#A855F7] stroke-[2.2]" />
                 </div>
@@ -149,10 +153,10 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
                     Verify & moderate
                   </span>
                 </div>
-              </div>
+              </button>
 
               {!isAdminAuthenticated && (
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -167,7 +171,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
                   </button>
                 </div>
               )}
-            </button>
+            </div>
           </div>
         </div>
 

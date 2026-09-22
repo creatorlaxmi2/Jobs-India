@@ -379,19 +379,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex items-start justify-between gap-3 pb-3.5 border-b border-slate-800/80">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-[#064E3B] font-extrabold text-sm shadow-md flex-shrink-0">
-              JH
+              JI
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-white tracking-tight leading-snug">
                 {tab === 'signup'
-                  ? 'Sign Up to Jobs Help'
+                  ? 'Sign Up to Jobs India Portal'
                   : tab === 'otp'
                   ? 'Instant Mobile OTP Login'
-                  : 'Log In to Jobs Help Account'}
+                  : 'Log In to Jobs India Portal'}
               </h2>
               <p className="text-xs text-slate-400">
                 {tab === 'signup'
-                  ? 'Create your free account for Patna & Bihar jobs'
+                  ? 'Create your free account for jobs across India'
                   : tab === 'otp'
                   ? 'Direct passwordless login with OTP verification'
                   : 'Welcome back! Access your verified portal'}

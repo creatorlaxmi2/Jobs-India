@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, ChevronDown, Heart, Bell, Share2, Check, User, Briefcase, Shield, LogIn, LogOut, UserCheck } from 'lucide-react';
 import { JobsIndiaLogo } from './JobsIndiaLogo';
 import { AppMode } from '../types';
+import { LocationPickerModal } from './LocationPickerModal';
 
 interface HeaderProps {
   currentCity: string;
@@ -82,8 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right: Auth Status / Log In, Switch Mode, Refer, Saved, Notifications */}
           <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-            {/* Primary Login / User Account Badge */}
-            {isLoggedIn ? (
+            {/* Logged in User Account Badge (Only shown when logged in) */}
+            {isLoggedIn && (
               <div className="flex items-center gap-1">
                 <div
                   id="header-user-status-badge"
@@ -106,28 +107,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 )}
               </div>
-            ) : (
-              onOpenAuth && (
-                <div className="flex items-center gap-1">
-                  <button
-                    id="header-login-btn"
-                    onClick={() => onOpenAuth('login')}
-                    className="flex items-center gap-1 bg-[#10B981] hover:bg-[#059669] text-[#022c22] font-black px-2 sm:px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs transition-all shadow-xs"
-                    title="Log In"
-                  >
-                    <LogIn className="w-3 h-3 stroke-[2.5]" />
-                    <span>Log In</span>
-                  </button>
-                  <button
-                    id="header-signup-btn"
-                    onClick={() => onOpenAuth('signup')}
-                    className="hidden sm:flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-bold px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs transition-all"
-                    title="Create Account"
-                  >
-                    <span>Sign Up</span>
-                  </button>
-                </div>
-              )
             )}
 
             {/* Switch App Mode Trigger Button */}
@@ -214,62 +193,16 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* Quick Location Change Bottom Sheet / Modal */}
-      {showLocationModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div
-            id="location-picker-sheet"
-            className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl animate-in fade-in slide-in-from-bottom-6 duration-200"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
-              <div>
-                <h3 className="text-lg font-bold text-[#1E2544]">Select Your Location</h3>
-                <p className="text-xs text-[#687386]">Jobs will be prioritized near you</p>
-              </div>
-              <button
-                onClick={() => setShowLocationModal(false)}
-                className="text-gray-400 hover:text-gray-700 p-1 text-sm font-semibold"
-              >
-                Done
-              </button>
-            </div>
-
-            <div className="mt-3 max-h-72 overflow-y-auto space-y-1.5">
-              {AVAILABLE_LOCATIONS.map((loc) => {
-                const isSelected =
-                  currentCity === loc.city && currentLocality === loc.locality;
-                return (
-                  <button
-                    key={`${loc.city}-${loc.locality}`}
-                    onClick={() => {
-                      onSelectLocation(loc.city, loc.locality);
-                      setShowLocationModal(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all ${
-                      isSelected
-                        ? 'bg-[#EEF2FF] border border-[#4055B8] text-[#4055B8] font-bold'
-                        : 'hover:bg-gray-50 text-gray-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <MapPin
-                        className={`w-4 h-4 ${
-                          isSelected ? 'text-[#4055B8]' : 'text-gray-400'
-                        }`}
-                      />
-                      <div>
-                        <p className="text-sm font-semibold">{loc.city}</p>
-                        <p className="text-xs text-gray-500">{loc.locality}</p>
-                      </div>
-                    </div>
-                    {isSelected && <Check className="w-4 h-4 text-[#4055B8]" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Quick Location Change Bottom Sheet / Modal with Live GPS Tracking */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        currentCity={currentCity}
+        currentLocality={currentLocality}
+        onSelectLocation={(city, locality) => {
+          onSelectLocation(city, locality);
+        }}
+      />
     </>
   );
 };

@@ -906,47 +906,89 @@ export const MyActivityTab: React.FC<MyActivityTabProps> = ({
 
       {/* MODAL: TIPS & SUPPORT DETAIL DIALOG */}
       {selectedSupportModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in duration-150">
+            <div className="flex items-start justify-between pb-1">
               <div>
-                <span className="text-[10px] font-bold text-[#4055B8] uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-[#2A48C8] uppercase tracking-wider block">
                   {selectedSupportModal.category}
                 </span>
-                <h3 className="text-base font-bold text-[#1E2544]">
+                <h3 className="text-lg font-bold text-[#1E2544] mt-0.5">
                   {selectedSupportModal.title}
                 </h3>
               </div>
               <button
                 onClick={() => setSelectedSupportModal(null)}
-                className="p-1 text-gray-400 hover:text-gray-700"
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-[#687386] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#687386] leading-relaxed">
               {selectedSupportModal.description}
             </p>
 
             <div className="space-y-3 pt-1">
-              {selectedSupportModal.points.map((pt, idx) => (
-                <div
-                  key={idx}
-                  className="bg-[#F8FAFC] p-3 rounded-xl border border-[#EEF2FF] space-y-1"
-                >
-                  <h4 className="text-xs font-bold text-[#1E2544]">{pt.title}</h4>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {pt.content}
-                  </p>
-                </div>
-              ))}
+              {selectedSupportModal.points.map((pt, idx) => {
+                const isWhatsApp = pt.title.toLowerCase().includes('whatsapp');
+                const isEmail = pt.title.toLowerCase().includes('email');
+                const isPhone = pt.title.toLowerCase().includes('helpline') || pt.title.toLowerCase().includes('phone');
+
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs hover:border-gray-200 transition-colors space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-[#1E2544]">{pt.title}</h4>
+                    <p className="text-xs text-[#525D73] leading-relaxed">
+                      {pt.content}
+                    </p>
+                    {isWhatsApp && (
+                      <div className="pt-1.5">
+                        <a
+                          href="https://wa.me/918863090950?text=Hello%20Jobs%20India%20Support%2C%20I%20need%20help%20with%20my%20job%20application"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#10B981] hover:underline"
+                        >
+                          <span>Chat on WhatsApp (+91 8863090950)</span>
+                          <span>→</span>
+                        </a>
+                      </div>
+                    )}
+                    {isEmail && (
+                      <div className="pt-1.5">
+                        <a
+                          href="mailto:support.jobsindia@gmail.com"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2A48C8] hover:underline"
+                        >
+                          <span>Send Email (support.jobsindia@gmail.com)</span>
+                          <span>→</span>
+                        </a>
+                      </div>
+                    )}
+                    {isPhone && (
+                      <div className="pt-1.5">
+                        <a
+                          href="tel:18005627463"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2A48C8] hover:underline"
+                        >
+                          <span>Call Toll-Free (1800-562-7463)</span>
+                          <span>→</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="pt-2">
               <button
                 onClick={() => setSelectedSupportModal(null)}
-                className="w-full py-2.5 rounded-xl bg-[#4055B8] text-white text-xs font-bold"
+                className="w-full py-3 rounded-xl bg-[#3949AB] hover:bg-[#283593] text-white text-sm font-bold shadow-md transition-colors"
               >
                 Got It, Thanks!
               </button>
