@@ -92,6 +92,11 @@ export default function App() {
   const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
   const [adminAuthInitialView, setAdminAuthInitialView] = useState<'login' | 'reset'>('login');
 
+  // User Authentication State
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return localStorage.getItem('jobs_india_logged_in') === 'true';
+  });
+
   const handleSelectMode = (mode: AppMode) => {
     // Require password authentication for Admin Panel
     if (mode === 'admin' && !isAdminAuthenticated) {
@@ -155,6 +160,11 @@ export default function App() {
       city?: string;
     }
   ) => {
+    setIsLoggedIn(true);
+    localStorage.setItem('jobs_india_logged_in', 'true');
+    localStorage.setItem('jobs_india_logged_user', userName);
+    localStorage.setItem('jobs_india_logged_mode', mode);
+
     if (mode === 'admin') {
       setIsAdminAuthenticated(true);
       localStorage.setItem('jobs_india_admin_auth', 'true');
@@ -172,6 +182,18 @@ export default function App() {
     })`;
     setModeToast(label);
     setTimeout(() => setModeToast(null), 3500);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setIsAdminAuthenticated(false);
+    localStorage.removeItem('jobs_india_logged_in');
+    localStorage.removeItem('jobs_india_logged_user');
+    localStorage.removeItem('jobs_india_logged_mode');
+    localStorage.removeItem('jobs_india_admin_auth');
+    setCurrentMode('job-seeker');
+    setModeToast('Successfully logged out');
+    setTimeout(() => setModeToast(null), 3000);
   };
 
   const handleVerifyJob = (jobId: string) => {
@@ -379,6 +401,10 @@ export default function App() {
             onOpenReferModal={() => setIsReferOpen(true)}
             currentMode={currentMode}
             onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+            isLoggedIn={isLoggedIn}
+            userName={userProfile.name}
+            onOpenAuth={handleOpenAuth}
+            onLogout={handleLogout}
           />
 
           {/* Main Tab Views */}
@@ -399,6 +425,8 @@ export default function App() {
                 onSearchChange={setHomeSearchQuery}
                 onSearchSubmit={handleSearchSubmit}
                 onOpenProfile={() => setActiveTab('profile')}
+                isLoggedIn={isLoggedIn}
+                onOpenAuth={handleOpenAuth}
               />
             )}
 
@@ -446,6 +474,8 @@ export default function App() {
                 onNavigateToPremium={() => setActiveTab('premium')}
                 onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
                 onOpenAuth={handleOpenAuth}
+                isLoggedIn={isLoggedIn}
+                onLogout={handleLogout}
               />
             )}
           </main>

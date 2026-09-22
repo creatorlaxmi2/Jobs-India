@@ -32,7 +32,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
       <div
         id="switch-mode-dialog"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[340px] bg-[#141A28] border border-slate-700/60 rounded-3xl p-4 shadow-2xl animate-in zoom-in-95 duration-150 text-white select-none"
+        className="w-full max-w-[340px] bg-[#141A28] border border-slate-700/60 rounded-3xl p-4 shadow-2xl animate-in zoom-in-95 duration-150 text-white"
       >
         {/* Header Title with close icon */}
         <div className="flex items-center justify-between px-2 pt-1 pb-2">

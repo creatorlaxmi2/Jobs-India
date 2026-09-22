@@ -28,6 +28,8 @@ interface HomeTabProps {
   onSearchChange: (query: string) => void;
   onSearchSubmit: (query: string) => void;
   onOpenProfile: () => void;
+  isLoggedIn?: boolean;
+  onOpenAuth?: (tab: 'login' | 'signup') => void;
 }
 
 interface ActionPromoCard {
@@ -54,6 +56,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   onSearchChange,
   onSearchSubmit,
   onOpenProfile,
+  isLoggedIn = false,
+  onOpenAuth,
 }) => {
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -134,7 +138,47 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   };
 
   return (
-    <div className="space-y-5 pb-20 pt-1">
+    <div className="space-y-4 pb-20 pt-1">
+      {/* Guest Authentication Action Banner */}
+      {!isLoggedIn && onOpenAuth && (
+        <section className="px-4">
+          <div
+            id="home-guest-auth-banner"
+            className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] border border-slate-700/80 rounded-2xl p-3 text-white shadow-sm flex items-center justify-between gap-2"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-[#10B981] flex items-center justify-center text-[#064E3B] font-black text-xs flex-shrink-0 shadow-xs">
+                JH
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-xs font-bold text-white truncate">
+                  Jobs Help Bihar Portal
+                </h3>
+                <p className="text-[11px] text-slate-300 truncate">
+                  Log in or sign up to apply & connect with HRs
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                id="home-guest-login-btn"
+                onClick={() => onOpenAuth('login')}
+                className="px-2.5 py-1.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#022c22] font-black text-xs transition-colors shadow-xs"
+              >
+                Log In
+              </button>
+              <button
+                id="home-guest-signup-btn"
+                onClick={() => onOpenAuth('signup')}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors border border-slate-700/60"
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Search Section with Orange/Gold subtle highlight */}
       <section className="px-4">
         <div className="relative">

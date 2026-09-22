@@ -51,6 +51,22 @@ export interface Job {
   recruiterContact?: RecruiterContact;
 }
 
+export interface UserEducation {
+  collegeName: string;
+  endYear: string;
+  degree: string;
+  specialization: string;
+}
+
+export interface UserExperienceItem {
+  workType: string;
+  industry: string;
+  currentSalary: string;
+  companyName: string;
+  startDate: string;
+  jobTitle: string;
+}
+
 export interface UserProfile {
   name: string;
   phone: string;
@@ -58,6 +74,17 @@ export interface UserProfile {
   city: string;
   locality: string;
   avatar: string;
+  gender?: string;
+  birthday?: string;
+  englishLevel?: string;
+  knownLanguages?: string[];
+  aboutMe?: string;
+  totalWorkExperience?: string;
+  experienceLevel?: string;
+  experiences?: UserExperienceItem[];
+  assets?: string[];
+  educationDetails?: UserEducation;
+  certifications?: string[];
   education: string;
   experience: string;
   currentSalary: string;

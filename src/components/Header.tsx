@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, ChevronDown, Heart, Bell, Share2, Check, User, Briefcase, Shield } from 'lucide-react';
+import { MapPin, ChevronDown, Heart, Bell, Share2, Check, User, Briefcase, Shield, LogIn, LogOut, UserCheck } from 'lucide-react';
 import { JobsIndiaLogo } from './JobsIndiaLogo';
 import { AppMode } from '../types';
 
@@ -14,6 +14,10 @@ interface HeaderProps {
   onOpenReferModal: () => void;
   currentMode: AppMode;
   onOpenSwitchMode: () => void;
+  isLoggedIn?: boolean;
+  userName?: string;
+  onOpenAuth?: (tab: 'login' | 'signup') => void;
+  onLogout?: () => void;
 }
 
 const AVAILABLE_LOCATIONS = [
@@ -40,6 +44,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenReferModal,
   currentMode,
   onOpenSwitchMode,
+  isLoggedIn = false,
+  userName,
+  onOpenAuth,
+  onLogout,
 }) => {
   const [showLocationModal, setShowLocationModal] = useState(false);
 
@@ -47,39 +55,87 @@ export const Header: React.FC<HeaderProps> = ({
     <>
       <header
         id="jobs-india-header"
-        className="sticky top-0 z-30 bg-white border-b border-[#E5E7EB] px-3.5 py-2 shadow-xs"
+        className="sticky top-0 z-30 bg-white border-b border-[#E5E7EB] px-3 py-2 shadow-xs"
       >
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Location Selector with Patna & Muhammadpur */}
           <button
             id="header-location-selector-btn"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-2 text-left group hover:opacity-90 transition-opacity focus:outline-hidden py-0.5 max-w-[48%]"
+            className="flex items-center gap-1.5 sm:gap-2 text-left group hover:opacity-90 transition-opacity focus:outline-hidden py-0.5 max-w-[42%] sm:max-w-[48%]"
           >
-            <div className="w-8 h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#4055B8] flex-shrink-0 group-hover:bg-[#E0E7FF] transition-colors">
-              <MapPin className="w-4 h-4 text-[#4055B8]" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#4055B8] flex-shrink-0 group-hover:bg-[#E0E7FF] transition-colors">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4055B8]" />
             </div>
             <div className="flex flex-col leading-tight truncate">
               <div className="flex items-center gap-1">
-                <span className="font-bold text-[#1E2544] text-[14px] tracking-tight">
+                <span className="font-bold text-[#1E2544] text-[13px] sm:text-[14px] tracking-tight truncate">
                   {currentCity}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#687386] transition-transform group-hover:translate-y-0.5" />
+                <ChevronDown className="w-3 h-3 text-[#687386] transition-transform group-hover:translate-y-0.5 flex-shrink-0" />
               </div>
-              <span className="text-[11px] text-[#687386] truncate max-w-[110px]">
+              <span className="text-[10px] sm:text-[11px] text-[#687386] truncate max-w-[85px] sm:max-w-[110px]">
                 {currentLocality}
               </span>
             </div>
           </button>
 
-          {/* Right: Switch Mode Button, Refer, Saved Hearts, Notification Bell */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Right: Auth Status / Log In, Switch Mode, Refer, Saved, Notifications */}
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+            {/* Primary Login / User Account Badge */}
+            {isLoggedIn ? (
+              <div className="flex items-center gap-1">
+                <div
+                  id="header-user-status-badge"
+                  className="flex items-center gap-1 bg-[#EEF2FF] text-[#4055B8] border border-[#4055B8]/30 px-2 py-1 rounded-full text-[11px] font-bold"
+                  title={`Logged in as ${userName || 'User'}`}
+                >
+                  <UserCheck className="w-3 h-3 text-[#10B981] flex-shrink-0" />
+                  <span className="max-w-[65px] sm:max-w-[90px] truncate">
+                    {userName ? userName.split(' ')[0] : 'User'}
+                  </span>
+                </div>
+                {onLogout && (
+                  <button
+                    id="header-logout-btn"
+                    onClick={onLogout}
+                    title="Log Out"
+                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              onOpenAuth && (
+                <div className="flex items-center gap-1">
+                  <button
+                    id="header-login-btn"
+                    onClick={() => onOpenAuth('login')}
+                    className="flex items-center gap-1 bg-[#10B981] hover:bg-[#059669] text-[#022c22] font-black px-2 sm:px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs transition-all shadow-xs"
+                    title="Log In"
+                  >
+                    <LogIn className="w-3 h-3 stroke-[2.5]" />
+                    <span>Log In</span>
+                  </button>
+                  <button
+                    id="header-signup-btn"
+                    onClick={() => onOpenAuth('signup')}
+                    className="hidden sm:flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-bold px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs transition-all"
+                    title="Create Account"
+                  >
+                    <span>Sign Up</span>
+                  </button>
+                </div>
+              )
+            )}
+
             {/* Switch App Mode Trigger Button */}
             <button
               id="header-switch-mode-btn"
               onClick={onOpenSwitchMode}
               title="Switch App Mode (Job Seeker / Employer / Admin)"
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs border ${
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs border ${
                 currentMode === 'employer'
                   ? 'bg-[#FEF3C7] text-[#92400E] border-[#F59E0B]/50 hover:bg-[#FDE68A]'
                   : currentMode === 'admin'
@@ -94,7 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <User className="w-3.5 h-3.5 text-[#10B981] flex-shrink-0" />
               )}
-              <span className="text-[11px] font-extrabold tracking-tight">
+              <span className="text-[11px] font-extrabold tracking-tight hidden sm:inline">
                 {currentMode === 'employer'
                   ? 'Employer'
                   : currentMode === 'admin'

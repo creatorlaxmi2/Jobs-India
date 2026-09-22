@@ -491,21 +491,46 @@ export const INITIAL_JOBS: Job[] = [
 ];
 
 export const INITIAL_USER_PROFILE = {
-  name: 'Aman Kumar Verma',
-  phone: '+91 98350 44821',
-  email: 'aman.verma.jobs@gmail.com',
+  name: 'Laxmi Kumari',
+  phone: '8863090950',
+  email: 'sitarampatna7@gmail.com',
   city: 'Patna',
   locality: 'Muhammadpur',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  education: 'Graduate - B.Sc Nursing & Healthcare',
-  experience: '2 Years in Clinical & Patient Care',
-  currentSalary: '₹22,000 / month',
-  expectedSalary: '₹32,000 - ₹38,000 / month',
-  skills: ['Patient Care', 'Staff Nursing', 'IV Cannulation', 'Emergency Response', 'Vital Monitoring', 'Customer Communication'],
-  resumeName: 'Aman_Verma_Resume_2026.pdf',
-  resumeUploadedAt: 'Uploaded 5 days ago (ATS Score: 88%)',
-  preferredRoles: ['Staff Nurse', 'Customer Support Executive', 'Medical Operations', 'Emergency Care Nurse'],
-  preferredLocations: ['Patna', 'Muhammadpur', 'Bailey Road', 'Work From Home'],
+  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
+  gender: 'Female',
+  birthday: '2002-04-02',
+  englishLevel: 'Good English',
+  knownLanguages: ['English', 'Hindi'],
+  aboutMe: '',
+  totalWorkExperience: '1 years',
+  experienceLevel: 'experience',
+  experiences: [
+    {
+      workType: 'Full Time',
+      industry: 'Hospitality',
+      currentSalary: '9500',
+      companyName: 'Oxig',
+      startDate: '2025',
+      jobTitle: 'Nursing Supervisor'
+    }
+  ],
+  skills: ['Patient Care', 'Staff Nurse'],
+  assets: ['Smartphone', 'Two Wheeler (Scooty)'],
+  educationDetails: {
+    collegeName: 'Mona',
+    endYear: '2027',
+    degree: 'Gnm',
+    specialization: 'Nursing'
+  },
+  certifications: [] as string[],
+  education: 'Gnm in Nursing - Mona (2027)',
+  experience: '1 Year - Nursing Supervisor at Oxig',
+  currentSalary: '₹9,500 / month',
+  expectedSalary: '₹18,000 - ₹25,000 / month',
+  resumeName: 'Resume.pdf',
+  resumeUploadedAt: 'Uploaded (ATS Score: 88%)',
+  preferredRoles: ['Staff Nurse', 'Nursing Supervisor', 'Patient Care Executive'],
+  preferredLocations: ['Patna', 'Muhammadpur', 'Bailey Road'],
   workPreference: 'All' as const,
   completionPercentage: 77
 };
