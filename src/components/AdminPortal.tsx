@@ -24,6 +24,8 @@ import {
   KeyRound,
   LogOut,
   Lock,
+  ListOrdered,
+  LayoutList,
 } from 'lucide-react';
 import { Job, RecruiterContact } from '../types';
 import { getJobRecruiter } from '../data/mockJobs';
@@ -63,6 +65,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [activeFilter, setActiveFilter] = useState<'all' | 'verified' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
+  const [viewLayout, setViewLayout] = useState<'numbered-cards' | 'simple-list'>('numbered-cards');
+  const [customVerifiedRecruiters, setCustomVerifiedRecruiters] = useState<Record<string, boolean>>({});
 
   // Dedicated Recruiter Queue state
   const [recruiterQueue, setRecruiterQueue] = useState<RecruiterQueueItem[]>([
@@ -166,6 +170,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const handleRejectRecruiter = (recruiterId: string, name: string) => {
     setRecruiterQueue((prev) => prev.filter((r) => r.id !== recruiterId));
     notify(`Flagged and removed recruiter profile "${name}".`);
+  };
+
+  const handleVerifyRecruiterByName = (recruiterName: string, company: string) => {
+    setCustomVerifiedRecruiters((prev) => ({ ...prev, [recruiterName]: true }));
+    setRecruiterQueue((prev) =>
+      prev.map((r) =>
+        r.name.toLowerCase() === recruiterName.toLowerCase() ||
+        r.company.toLowerCase() === company.toLowerCase()
+          ? { ...r, isVerified: true }
+          : r
+      )
+    );
+    notify(`Verified HR Recruiter "${recruiterName}" for ${company}! Status updated.`);
   };
 
   // Filtered jobs with recruiter search
@@ -425,19 +442,271 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         </div>
 
-        {/* TAB 1: JOB POSTINGS MODERATION (with Recruiter Name, Mobile No, Email ID) */}
+        {/* TAB 1: JOB POSTINGS MODERATION (with Recruiter Name, Mobile No, Email ID & Numbering) */}
         {adminSubTab === 'job-postings' && (
           <div className="space-y-3">
+            {/* Numbering Header Bar & View Layout Toggle */}
+            <div className="flex items-center justify-between gap-2 px-1 py-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <ListOrdered className="w-4 h-4 text-purple-400" />
+                  <span>Numbered Job Postings ({filteredJobs.length})</span>
+                </span>
+                {filteredJobs.length > 0 && (
+                  <span className="text-[10px] text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full border border-purple-800/60 font-semibold font-mono">
+                    #1 – #{filteredJobs.length}
+                  </span>
+                )}
+              </div>
+
+              {/* View Layout Switcher: Numbered Cards vs Simple Numbered List */}
+              <div className="flex items-center gap-1 bg-[#1E293B] p-0.5 rounded-xl border border-slate-800 text-[11px]">
+                <button
+                  type="button"
+                  id="admin-view-cards-btn"
+                  onClick={() => setViewLayout('numbered-cards')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors ${
+                    viewLayout === 'numbered-cards'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Detailed Numbered Cards"
+                >
+                  <LayoutList className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Numbered Cards</span>
+                </button>
+                <button
+                  type="button"
+                  id="admin-view-simple-btn"
+                  onClick={() => setViewLayout('simple-list')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors ${
+                    viewLayout === 'simple-list'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Simple Numbered List"
+                >
+                  <ListOrdered className="w-3.5 h-3.5" />
+                  <span>Simple List</span>
+                </button>
+              </div>
+            </div>
+
             {filteredJobs.length === 0 ? (
               <div className="bg-[#1E293B] p-8 rounded-2xl border border-slate-800 text-center space-y-2">
                 <Briefcase className="w-8 h-8 text-slate-500 mx-auto" />
                 <p className="text-sm font-semibold text-slate-300">No job listings found</p>
                 <p className="text-xs text-slate-500">Try changing your search query or status filter.</p>
               </div>
+            ) : viewLayout === 'simple-list' ? (
+              /* ================== SIMPLE NUMBERED LIST VIEW ================== */
+              <div className="space-y-2.5">
+                {filteredJobs.map((job, index) => {
+                  const recruiter = getJobRecruiter(job);
+                  const isVerified = job.aboutCompany.verified;
+                  const isRecruiterVerified = Boolean(
+                    recruiter.isVerified ||
+                    customVerifiedRecruiters[recruiter.name] ||
+                    recruiterQueue.some((r) => r.name.toLowerCase() === recruiter.name.toLowerCase() && r.isVerified)
+                  );
+
+                  return (
+                    <div
+                      key={job.id}
+                      id={`admin-simple-job-${job.id}`}
+                      className="bg-[#1E293B] p-3.5 rounded-2xl border border-slate-800/90 space-y-2.5 hover:border-purple-500/50 transition-colors shadow-sm"
+                    >
+                      {/* Top Row: Sequential Number, Job Title, Company, Salary & Verification Pill */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          {/* Sequential Number Badge */}
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-600/30 border border-purple-500/50 text-purple-200 font-extrabold text-xs sm:text-sm flex items-center justify-center flex-shrink-0 shadow-xs">
+                            #{index + 1}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h3 className="text-sm font-bold text-white leading-tight">
+                                {job.title}
+                              </h3>
+                              {isVerified && (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5 truncate">
+                              {job.company} • {job.locality}, {job.location}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right flex-shrink-0">
+                          <span className="text-[#38BDF8] font-bold text-xs block">
+                            {job.salary}
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mt-0.5 ${
+                              isVerified
+                                ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30'
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            }`}
+                          >
+                            {isVerified ? 'Verified Job' : 'Pending Job'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Recruiter Details Row: Name, Mobile, Email, HR Verification */}
+                      <div className="bg-[#0F172A]/85 rounded-xl p-2.5 border border-slate-700/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                        {/* 1. Recruiter / HR Name */}
+                        <div className="flex items-start gap-2">
+                          <User className="w-3.5 h-3.5 text-purple-400 mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <span className="text-[10px] text-slate-400 block font-medium">HR / Recruiter Name</span>
+                            <span className="font-bold text-white block truncate text-xs">
+                              {recruiter.name}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block truncate">
+                              {recruiter.designation}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 2. Official Mobile No */}
+                        <div className="flex items-start justify-between gap-1">
+                          <div className="flex items-start gap-2 min-w-0">
+                            <Phone className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-[10px] text-slate-400 block font-medium">Official Mobile No</span>
+                              <span className="font-bold text-emerald-400 font-mono tracking-wide block truncate text-xs">
+                                {recruiter.phone}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <a
+                              href={`tel:${recruiter.phone.replace(/[^0-9+]/g, '')}`}
+                              className="p-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 transition-colors"
+                              title="Direct Phone Call"
+                            >
+                              <PhoneCall className="w-3 h-3" />
+                            </a>
+                            <a
+                              href={`https://wa.me/${recruiter.phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 transition-colors"
+                              title="WhatsApp Message"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                            </a>
+                            <button
+                              onClick={() => copyToClipboard(recruiter.phone, 'Mobile Number')}
+                              className="p-1 rounded bg-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors"
+                              title="Copy Mobile"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* 3. Official Email ID */}
+                        <div className="flex items-start justify-between gap-1">
+                          <div className="flex items-start gap-2 min-w-0">
+                            <Mail className="w-3.5 h-3.5 text-sky-400 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-[10px] text-slate-400 block font-medium">Official Work Email</span>
+                              <span className="font-medium text-sky-300 block truncate text-xs">
+                                {recruiter.email}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <a
+                              href={`mailto:${recruiter.email}?subject=Job%20Moderation%20(Listing%20%23${index + 1})%20-%20Jobs%20India&body=Hello%20${encodeURIComponent(recruiter.name)},`}
+                              className="p-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 transition-colors"
+                              title="Send Email"
+                            >
+                              <Mail className="w-3 h-3" />
+                            </a>
+                            <button
+                              onClick={() => copyToClipboard(recruiter.email, 'Email ID')}
+                              className="p-1 rounded bg-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors"
+                              title="Copy Email"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Recruiter HR Verification Status & Admin Controls */}
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800 text-xs">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] text-slate-400">Recruiter HR:</span>
+                          {isRecruiterVerified ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              <span>Verified HR ID</span>
+                            </span>
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-md">
+                                ⏳ Pending KYC
+                              </span>
+                              <button
+                                onClick={() => handleVerifyRecruiterByName(recruiter.name, job.company)}
+                                className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold transition-colors flex items-center gap-1"
+                              >
+                                <Check className="w-2.5 h-2.5" />
+                                <span>Verify HR</span>
+                              </button>
+                            </div>
+                          )}
+                          {recruiter.kycDocument && (
+                            <span className="text-[10px] text-slate-400 hidden md:inline">
+                              KYC: {recruiter.kycDocument}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {!isVerified && (
+                            <button
+                              onClick={() => {
+                                onVerifyJob(job.id);
+                                notify(`Approved Job Listing #${index + 1} (${job.title})!`);
+                              }}
+                              className="px-2.5 py-1 bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] border border-[#10B981]/40 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>Approve</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              onRemoveJob(job.id);
+                              notify(`Removed Listing #${index + 1} "${job.title}".`);
+                            }}
+                            className="px-2.5 py-1 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Take Down</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              filteredJobs.map((job) => {
+              /* ================== DETAILED NUMBERED CARDS VIEW ================== */
+              filteredJobs.map((job, index) => {
                 const recruiter = getJobRecruiter(job);
                 const isVerified = job.aboutCompany.verified;
+                const isRecruiterVerified = Boolean(
+                  recruiter.isVerified ||
+                  customVerifiedRecruiters[recruiter.name] ||
+                  recruiterQueue.some((r) => r.name.toLowerCase() === recruiter.name.toLowerCase() && r.isVerified)
+                );
 
                 return (
                   <div
@@ -445,24 +714,30 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     id={`admin-job-${job.id}`}
                     className="bg-[#1E293B] p-4 rounded-2xl border border-slate-800/80 space-y-3 hover:border-purple-500/40 transition-colors shadow-sm"
                   >
-                    {/* Header: Title, Company, Location, and Status Pill */}
+                    {/* Header: Sequential Number, Title, Company, Location, and Status Pill */}
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h3 className="text-sm sm:text-base font-bold text-white leading-tight">
-                            {job.title}
-                          </h3>
-                          {isVerified && (
-                            <CheckCircle2 className="w-4 h-4 text-[#10B981] flex-shrink-0" />
-                          )}
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        {/* Prominent Sequential Number Badge */}
+                        <div className="w-8 h-8 rounded-xl bg-purple-600/30 border border-purple-500/50 text-purple-200 font-extrabold text-xs flex items-center justify-center flex-shrink-0 shadow-xs">
+                          #{index + 1}
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {job.company} • {job.locality}, {job.location}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h3 className="text-sm sm:text-base font-bold text-white leading-tight">
+                              {job.title}
+                            </h3>
+                            {isVerified && (
+                              <CheckCircle2 className="w-4 h-4 text-[#10B981] flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {job.company} • {job.locality}, {job.location}
+                          </p>
+                        </div>
                       </div>
 
                       <span
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1 flex-shrink-0 ${
                           isVerified
                             ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40'
                             : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
@@ -487,17 +762,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <div className="flex items-center justify-between pb-1 border-b border-slate-700/50">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
                           <UserCheck className="w-3.5 h-3.5 text-[#C084FC]" />
-                          <span>Recruiter & HR Contact Details</span>
+                          <span>Recruiter & HR Contact Details (Listing #{index + 1})</span>
                         </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            recruiter.isVerified
-                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                          }`}
-                        >
-                          {recruiter.isVerified ? '✓ Verified Recruiter ID' : '⏳ KYC Pending'}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                              isRecruiterVerified
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                            }`}
+                          >
+                            {isRecruiterVerified ? '✓ Verified Recruiter ID' : '⏳ KYC Pending'}
+                          </span>
+                          {!isRecruiterVerified && (
+                            <button
+                              onClick={() => handleVerifyRecruiterByName(recruiter.name, job.company)}
+                              className="px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition-colors"
+                            >
+                              Verify HR ID
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Recruiter Details Grid: Name, Mobile No, Email ID */}
@@ -506,7 +791,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <div className="flex items-start gap-2 bg-[#1E293B]/60 p-2 rounded-lg border border-slate-800">
                           <User className="w-3.5 h-3.5 text-purple-400 mt-0.5 flex-shrink-0" />
                           <div className="min-w-0">
-                            <span className="text-[10px] text-slate-400 block">HR / Recruiter Name</span>
+                            <span className="text-[10px] text-slate-400 block font-medium">HR / Recruiter Name</span>
                             <span className="font-bold text-white truncate block">
                               {recruiter.name}
                             </span>
@@ -521,8 +806,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           <div className="flex items-start gap-2 min-w-0">
                             <Phone className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
                             <div className="min-w-0">
-                              <span className="text-[10px] text-slate-400 block">Official Mobile No</span>
-                              <span className="font-bold text-emerald-400 tracking-wide text-xs block truncate">
+                              <span className="text-[10px] text-slate-400 block font-medium">Official Mobile No</span>
+                              <span className="font-bold text-emerald-400 tracking-wide text-xs block truncate font-mono">
                                 {recruiter.phone}
                               </span>
                             </div>
@@ -559,7 +844,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           <div className="flex items-start gap-2 min-w-0">
                             <Mail className="w-3.5 h-3.5 text-sky-400 mt-0.5 flex-shrink-0" />
                             <div className="min-w-0">
-                              <span className="text-[10px] text-slate-400 block">Official Work Email ID</span>
+                              <span className="text-[10px] text-slate-400 block font-medium">Official Work Email ID</span>
                               <span className="font-semibold text-sky-300 text-xs block truncate">
                                 {recruiter.email}
                               </span>
@@ -567,7 +852,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <a
-                              href={`mailto:${recruiter.email}?subject=Job%20Posting%20Moderation%20-%20Jobs%20India&body=Hello%20${encodeURIComponent(recruiter.name)},`}
+                              href={`mailto:${recruiter.email}?subject=Job%20Posting%20Moderation%20(Listing%20%23${index + 1})%20-%20Jobs%20India&body=Hello%20${encodeURIComponent(recruiter.name)},`}
                               className="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-[11px] font-bold flex items-center gap-1 transition-colors"
                               title="Compose Email"
                             >
@@ -622,7 +907,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <button
                           onClick={() => {
                             onRemoveJob(job.id);
-                            notify(`Removed listing "${job.title}" by ${recruiter.name}.`);
+                            notify(`Removed listing #${index + 1} "${job.title}" by ${recruiter.name}.`);
                           }}
                           className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
                         >
@@ -658,7 +943,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <p className="text-xs text-slate-500">Try adjusting your filter or search query.</p>
               </div>
             ) : (
-              filteredRecruiters.map((rec) => (
+              filteredRecruiters.map((rec, index) => (
                 <div
                   key={rec.id}
                   id={`admin-recruiter-${rec.id}`}
@@ -667,12 +952,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   {/* Recruiter Header */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-500/40 text-purple-300 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {rec.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .slice(0, 2)}
+                      {/* Recruiter Sequential Number & Avatar */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="w-6 h-6 rounded-lg bg-purple-600/30 border border-purple-500/50 text-purple-200 font-extrabold text-[11px] flex items-center justify-center font-mono">
+                          #{index + 1}
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-500/40 text-purple-300 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {rec.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .slice(0, 2)}
+                        </div>
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
