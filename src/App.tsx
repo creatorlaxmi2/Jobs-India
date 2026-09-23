@@ -8,6 +8,9 @@ import {
   HRRequest,
   NotificationItem,
   JobPreference,
+  EmployerProfile,
+  PremiumPlan,
+  PlatformSettings,
 } from './types';
 import {
   INITIAL_JOBS,
@@ -16,6 +19,13 @@ import {
   INITIAL_HR_REQUESTS,
   INITIAL_NOTIFICATIONS,
 } from './data/mockJobs';
+import { DEFAULT_EMPLOYER_PROFILE, getCompanyInitials } from './data/employerProfiles';
+import {
+  loadStoredPremiumPlans,
+  saveStoredPremiumPlans,
+  loadStoredPlatformSettings,
+  saveStoredPlatformSettings,
+} from './data/settingsData';
 import { AndroidFrame } from './components/AndroidFrame';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
@@ -43,13 +53,51 @@ export default function App() {
   >(null);
 
   // Core Data State
-  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
-  const [userProfile, setUserProfile] = useState<UserProfile>(INITIAL_USER_PROFILE);
+  const [jobs, setJobs] = useState<Job[]>(() => {
+    try {
+      const saved = localStorage.getItem('jobs_india_jobs_list');
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_JOBS;
+  });
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('jobs_india_user_profile');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_USER_PROFILE;
+  });
   const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS);
   const [hrRequests, setHrRequests] = useState<HRRequest[]>(INITIAL_HR_REQUESTS);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set(['job-1', 'job-4']));
   const [isPremiumUser, setIsPremiumUser] = useState(false);
+
+  // Premium Plans & Platform Settings State (Configured by Admin)
+  const [premiumPlans, setPremiumPlans] = useState<PremiumPlan[]>(() =>
+    loadStoredPremiumPlans()
+  );
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() =>
+    loadStoredPlatformSettings()
+  );
+
+  const handleSavePremiumPlans = (updated: PremiumPlan[]) => {
+    setPremiumPlans(updated);
+    saveStoredPremiumPlans(updated);
+  };
+
+  const handleSavePlatformSettings = (updated: PlatformSettings) => {
+    setPlatformSettings(updated);
+    saveStoredPlatformSettings(updated);
+  };
 
   // Location State (Default: Patna / Muhammadpur as requested)
   const [currentCity, setCurrentCity] = useState('Patna');
@@ -96,6 +144,26 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     return localStorage.getItem('jobs_india_logged_in') === 'true';
   });
+
+  // Employer / HR Profile State (Synchronized with localStorage & HR Login)
+  const [employerProfile, setEmployerProfile] = useState<EmployerProfile>(() => {
+    try {
+      const saved = localStorage.getItem('jobs_india_employer_profile');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      // ignore parsing error
+    }
+    return DEFAULT_EMPLOYER_PROFILE;
+  });
+
+  const handleUpdateEmployerProfile = (updated: EmployerProfile) => {
+    setEmployerProfile(updated);
+    try {
+      localStorage.setItem('jobs_india_employer_profile', JSON.stringify(updated));
+    } catch (e) {
+      // ignore
+    }
+  };
 
   const handleSelectMode = (mode: AppMode) => {
     // Require password authentication for Admin Panel
@@ -158,6 +226,7 @@ export default function App() {
       companyName?: string;
       designation?: string;
       city?: string;
+      isNewSignUp?: boolean;
     }
   ) => {
     setIsLoggedIn(true);
@@ -169,6 +238,41 @@ export default function App() {
       setIsAdminAuthenticated(true);
       localStorage.setItem('jobs_india_admin_auth', 'true');
     }
+
+    if (mode === 'employer') {
+      const emailKey = (details?.email || userName).toLowerCase().trim();
+      if (details?.isNewSignUp) {
+        // Clear old job postings for this newly signed-up employer to start fresh
+        try {
+          localStorage.setItem(`jobs_india_employer_jobs_${emailKey}`, JSON.stringify([]));
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      setEmployerProfile((prev) => {
+        const company = details?.companyName || prev.companyName;
+        const cityName = details?.city ? details.city.split(',')[0].trim() : prev.city;
+        const updated: EmployerProfile = {
+          ...prev,
+          companyName: company,
+          companyInitials: getCompanyInitials(company),
+          hrName: userName,
+          workEmail: details?.email || prev.workEmail,
+          phone: details?.phone || prev.phone,
+          city: cityName,
+          hubName: `${cityName} Hub`,
+          designation: details?.designation || prev.designation || 'Verified HR',
+        };
+        try {
+          localStorage.setItem('jobs_india_employer_profile', JSON.stringify(updated));
+        } catch (e) {
+          // ignore
+        }
+        return updated;
+      });
+    }
+
     setCurrentMode(mode);
     setUserProfile((prev) => ({
       ...prev,
@@ -197,8 +301,8 @@ export default function App() {
   };
 
   const handleVerifyJob = (jobId: string) => {
-    setJobs((prev) =>
-      prev.map((j) => {
+    setJobs((prev) => {
+      const updated = prev.map((j) => {
         if (j.id !== jobId) return j;
         return {
           ...j,
@@ -211,18 +315,157 @@ export default function App() {
               }
             : undefined,
         };
-      })
-    );
+      });
+      try {
+        localStorage.setItem('jobs_india_jobs_list', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
   };
 
   const handleRemoveJob = (jobId: string) => {
-    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+    setJobs((prev) => {
+      const updated = prev.filter((j) => j.id !== jobId);
+      try {
+        localStorage.setItem('jobs_india_jobs_list', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
   };
 
-  const handleUpdateApplicationStatus = (appId: string, status: any) => {
+  const handleCleanDummyJobs = () => {
+    setJobs((prev) => {
+      const sampleIds = new Set(INITIAL_JOBS.map((j) => j.id));
+      const cleaned = prev.filter((j) => !sampleIds.has(j.id) && !j.id.startsWith('sample-'));
+      try {
+        localStorage.setItem('jobs_india_jobs_list', JSON.stringify(cleaned));
+      } catch {
+        // ignore
+      }
+      return cleaned;
+    });
+  };
+
+  const handleClearAllJobs = () => {
+    setJobs([]);
+    try {
+      localStorage.setItem('jobs_india_jobs_list', JSON.stringify([]));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleRestoreSampleJobs = () => {
+    setJobs(INITIAL_JOBS);
+    try {
+      localStorage.setItem('jobs_india_jobs_list', JSON.stringify(INITIAL_JOBS));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleUpdateApplicationStatus = (
+    appId: string,
+    status: any,
+    notificationData?: { title: string; message: string }
+  ) => {
     setApplications((prev) =>
-      prev.map((a) => (a.id === appId ? { ...a, status } : a))
+      prev.map((a) => {
+        if (a.id !== appId) return a;
+        const newTimeline = [...a.statusTimeline];
+        if (notificationData) {
+          const stageName =
+            status === 'Shortlisted'
+              ? 'Shortlisted by HR'
+              : status === 'Rejected'
+              ? 'Application Closed'
+              : status === 'Interview' || status === 'Interviewing'
+              ? 'Interview Scheduled'
+              : 'Status Updated';
+          newTimeline.push({
+            stage: stageName,
+            date: 'Today',
+            note: notificationData.message,
+            completed: true,
+            current: true,
+          });
+        }
+        return { ...a, status, statusTimeline: newTimeline };
+      })
     );
+
+    if (notificationData) {
+      const app = applications.find((a) => a.id === appId);
+      const newNotif: NotificationItem = {
+        id: `notif-app-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        type:
+          status === 'Shortlisted' || status === 'Interview' || status === 'Interviewing'
+            ? 'interview'
+            : 'application',
+        title: notificationData.title,
+        message: notificationData.message,
+        timestamp: 'Just now',
+        read: false,
+        jobId: app?.jobId,
+      };
+      setNotifications((prev) => [newNotif, ...prev]);
+    }
+  };
+
+  const handleBulkUpdateApplicationStatus = (
+    appIds: string[],
+    status: any,
+    notificationData?: { title: string; message: string }
+  ) => {
+    const idSet = new Set(appIds);
+    setApplications((prev) =>
+      prev.map((a) => {
+        if (!idSet.has(a.id)) return a;
+        const newTimeline = [...a.statusTimeline];
+        if (notificationData) {
+          const stageName =
+            status === 'Shortlisted'
+              ? 'Shortlisted by HR'
+              : status === 'Rejected'
+              ? 'Application Closed'
+              : status === 'Interview' || status === 'Interviewing'
+              ? 'Interview Scheduled'
+              : 'Status Updated';
+          newTimeline.push({
+            stage: stageName,
+            date: 'Today',
+            note: notificationData.message,
+            completed: true,
+            current: true,
+          });
+        }
+        return { ...a, status, statusTimeline: newTimeline };
+      })
+    );
+
+    if (notificationData) {
+      const targetApps = applications.filter((a) => idSet.has(a.id));
+      const newNotifs: NotificationItem[] = targetApps.map((app, idx) => ({
+        id: `notif-bulk-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+        type:
+          status === 'Shortlisted' || status === 'Interview' || status === 'Interviewing'
+            ? 'interview'
+            : 'application',
+        title: notificationData.title,
+        message: notificationData.message
+          .replace(/{CandidateName}/g, app.candidateName || 'Candidate')
+          .replace(/{JobTitle}/g, app.jobTitle)
+          .replace(/{Company}/g, app.company),
+        timestamp: 'Just now',
+        read: false,
+        jobId: app.jobId,
+      }));
+      setNotifications((prev) => [...newNotifs, ...prev]);
+    }
   };
 
   // Toggle Save Job
@@ -367,19 +610,45 @@ export default function App() {
       {currentMode === 'employer' ? (
         <EmployerPortal
           jobs={jobs}
-          onAddJob={(newJob) => setJobs((prev) => [newJob, ...prev])}
+          onAddJob={(newJob) =>
+            setJobs((prev) => {
+              const updated = [newJob, ...prev];
+              try {
+                localStorage.setItem('jobs_india_jobs_list', JSON.stringify(updated));
+              } catch {
+                // ignore
+              }
+              return updated;
+            })
+          }
           applications={applications}
           onUpdateApplicationStatus={handleUpdateApplicationStatus}
+          onBulkUpdateApplicationStatus={handleBulkUpdateApplicationStatus}
           onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
+          employerProfile={employerProfile}
+          onUpdateEmployerProfile={handleUpdateEmployerProfile}
+          onOpenAuth={handleOpenAuth}
+          plans={premiumPlans}
+          settings={platformSettings}
         />
       ) : currentMode === 'admin' ? (
         <AdminPortal
           jobs={jobs}
           onVerifyJob={handleVerifyJob}
           onRemoveJob={handleRemoveJob}
+          onCleanDummyJobs={handleCleanDummyJobs}
+          onClearAllJobs={handleClearAllJobs}
+          onRestoreSampleJobs={handleRestoreSampleJobs}
           onOpenSwitchMode={() => setIsSwitchModeOpen(true)}
           onOpenAdminSecurity={handleOpenAdminAuth}
           onLockAdminSession={handleLockAdminSession}
+          plans={premiumPlans}
+          settings={platformSettings}
+          onSavePlans={handleSavePremiumPlans}
+          onSaveSettings={handleSavePlatformSettings}
+          applications={applications}
+          userProfile={userProfile}
+          employerProfile={employerProfile}
         />
       ) : (
         <>
@@ -415,6 +684,14 @@ export default function App() {
             onOpenAuth={handleOpenAuth}
             onLogout={handleLogout}
           />
+
+          {/* Admin Platform Announcement Banner if Enabled */}
+          {platformSettings.showAnnouncement && platformSettings.bannerAnnouncement && (
+            <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-pink-900 text-white text-[11px] font-bold px-3 py-1.5 flex items-center justify-center gap-2 shadow-xs select-none">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 flex-shrink-0 animate-pulse" />
+              <span className="truncate">{platformSettings.bannerAnnouncement}</span>
+            </div>
+          )}
 
           {/* Main Tab Views */}
           <main className="min-h-[calc(100vh-120px)]">
@@ -473,6 +750,8 @@ export default function App() {
               <PremiumTab
                 isPremiumUser={isPremiumUser}
                 onUpgradePremium={() => setIsPremiumUser(true)}
+                plans={premiumPlans}
+                settings={platformSettings}
               />
             )}
 
@@ -481,6 +760,11 @@ export default function App() {
                 profile={userProfile}
                 onUpdateProfile={(updated) => {
                   setUserProfile(updated);
+                  try {
+                    localStorage.setItem('jobs_india_user_profile', JSON.stringify(updated));
+                  } catch {
+                    // ignore
+                  }
                   if (updated.city && updated.locality) {
                     setCurrentCity(updated.city);
                     setCurrentLocality(updated.locality);

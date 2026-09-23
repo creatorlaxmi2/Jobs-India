@@ -1,4 +1,4 @@
-import { Job, RecruiterContact } from '../types';
+import { Job, RecruiterContact, Application } from '../types';
 
 export function getJobRecruiter(job: Job): RecruiterContact {
   if (job.recruiterContact) {
@@ -535,7 +535,7 @@ export const INITIAL_USER_PROFILE = {
   completionPercentage: 77
 };
 
-export const INITIAL_APPLICATIONS = [
+export const INITIAL_APPLICATIONS: Application[] = [
   {
     id: 'app-1',
     jobId: 'job-1',
@@ -545,6 +545,14 @@ export const INITIAL_APPLICATIONS = [
     salary: '₹28,000 - ₹38,000 / mo',
     appliedDate: '18 Sep 2026',
     status: 'Interview' as const,
+    candidateName: 'Aman Kumar Verma',
+    candidatePhone: '+91 94310 88219',
+    candidateEmail: 'aman.verma@jobsindia.in',
+    candidateExperience: '3 Years Exp',
+    candidateQualification: 'B.Sc Nursing (Hons)',
+    candidateSkills: ['ICU Care', 'Vitals Monitoring', 'Emergency Response', 'Patient Care'],
+    matchScore: '96%',
+    resumeName: 'Aman_Verma_Nursing_Resume.pdf',
     statusTimeline: [
       { stage: 'Applied', date: '18 Sep 2026', note: 'Application and resume sent to HR team', completed: true },
       { stage: 'Viewed', date: '19 Sep 2026', note: 'Viewed by HR Senior Recruiter Priya Sharma', completed: true },
@@ -559,6 +567,187 @@ export const INITIAL_APPLICATIONS = [
     }
   },
   {
+    id: 'app-icu-1',
+    jobId: 'job-icu-nurse',
+    jobTitle: 'ICU Staff Nurse / GNM',
+    company: 'Apollo Diagnostics Patna',
+    location: 'Muhammadpur, Patna',
+    salary: '₹28,000 - ₹38,000 / mo',
+    appliedDate: '21 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Ananya Kumari',
+    candidatePhone: '+91 98350 77124',
+    candidateEmail: 'ananya.kumari.nurse@gmail.com',
+    candidateExperience: '2.5 Years Exp',
+    candidateQualification: 'GNM Diploma & Nursing Registration',
+    candidateSkills: ['ICU Ward', 'Ventilator Handling', 'IV Cannulation', 'Medication'],
+    matchScore: '98%',
+    resumeName: 'Ananya_Kumari_GNM_CV.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '21 Sep 2026', note: 'Application submitted via Jobs India', completed: true, current: true },
+      { stage: 'Viewed', date: 'Pending', note: 'Pending HR review', completed: false },
+    ],
+    hrContact: {
+      name: 'Dr. Alok Verma',
+      designation: 'Chief Medical HR',
+      phone: '+91 98350 12845'
+    }
+  },
+  {
+    id: 'app-icu-2',
+    jobId: 'job-icu-nurse',
+    jobTitle: 'ICU Staff Nurse / GNM',
+    company: 'Apollo Diagnostics Patna',
+    location: 'Muhammadpur, Patna',
+    salary: '₹28,000 - ₹38,000 / mo',
+    appliedDate: '21 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Sunil Kumar Sharma',
+    candidatePhone: '+91 97711 44320',
+    candidateEmail: 'sunil.sharma.icu@yahoo.com',
+    candidateExperience: '3.5 Years Exp',
+    candidateQualification: 'B.Sc Critical Care Nursing',
+    candidateSkills: ['Cardiac ICU', 'Patient Vitals', 'Wound Dressing', 'Night Shifts'],
+    matchScore: '94%',
+    resumeName: 'Sunil_Sharma_Resume.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '21 Sep 2026', note: 'Direct candidate application received', completed: true, current: true },
+      { stage: 'Viewed', date: 'Pending', note: 'Pending HR review', completed: false },
+    ],
+    hrContact: {
+      name: 'Dr. Alok Verma',
+      designation: 'Chief Medical HR',
+      phone: '+91 98350 12845'
+    }
+  },
+  {
+    id: 'app-icu-3',
+    jobId: 'job-icu-nurse',
+    jobTitle: 'ICU Staff Nurse / GNM',
+    company: 'Apollo Diagnostics Patna',
+    location: 'Muhammadpur, Patna',
+    salary: '₹28,000 - ₹38,000 / mo',
+    appliedDate: '20 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Priyanka Roy',
+    candidatePhone: '+91 91223 55901',
+    candidateEmail: 'priyanka.roy99@gmail.com',
+    candidateExperience: '2 Years Exp',
+    candidateQualification: 'GNM Diploma',
+    candidateSkills: ['Patient Care', 'Documentation', 'Vital Charting', 'Teamwork'],
+    matchScore: '91%',
+    resumeName: 'Priyanka_Roy_GNM.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '20 Sep 2026', note: 'Application received', completed: true, current: true }
+    ],
+  },
+  {
+    id: 'app-icu-4',
+    jobId: 'job-icu-nurse',
+    jobTitle: 'ICU Staff Nurse / GNM',
+    company: 'Apollo Diagnostics Patna',
+    location: 'Muhammadpur, Patna',
+    salary: '₹28,000 - ₹38,000 / mo',
+    appliedDate: '19 Sep 2026',
+    status: 'Shortlisted' as const,
+    candidateName: 'Megha Sinha',
+    candidatePhone: '+91 94700 88231',
+    candidateEmail: 'megha.sinha.care@gmail.com',
+    candidateExperience: '4 Years Exp',
+    candidateQualification: 'Post-Basic B.Sc Nursing',
+    candidateSkills: ['ICU & CCU Incharge', 'Emergency Protocols', 'NABH Standards'],
+    matchScore: '97%',
+    resumeName: 'Megha_Sinha_CV.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '19 Sep 2026', note: 'Application submitted', completed: true },
+      { stage: 'Shortlisted', date: '20 Sep 2026', note: 'Shortlisted for clinical interview', completed: true, current: true }
+    ],
+  },
+  {
+    id: 'app-tele-1',
+    jobId: 'job-telecaller-patna',
+    jobTitle: 'Customer Care & Telecaller Executive',
+    company: 'Apex Customer Connect',
+    location: 'Fraser Road, Patna',
+    salary: '₹18,000 - ₹25,000 / mo',
+    appliedDate: '22 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Vikash Kumar Mishra',
+    candidatePhone: '+91 99342 55910',
+    candidateEmail: 'vikash.mishra.bpo@gmail.com',
+    candidateExperience: '2 Years Exp',
+    candidateQualification: '12th Pass / Intermediate',
+    candidateSkills: ['Hindi Voice Process', 'Customer Grievances', 'Outbound Calling'],
+    matchScore: '95%',
+    resumeName: 'Vikash_Mishra_Telecaller.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '22 Sep 2026', note: 'Application received', completed: true, current: true }
+    ],
+  },
+  {
+    id: 'app-tele-2',
+    jobId: 'job-telecaller-patna',
+    jobTitle: 'Customer Care & Telecaller Executive',
+    company: 'Apex Customer Connect',
+    location: 'Fraser Road, Patna',
+    salary: '₹18,000 - ₹25,000 / mo',
+    appliedDate: '21 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Shreya Kumari',
+    candidatePhone: '+91 93045 77619',
+    candidateEmail: 'shreya.k.bpo@yahoo.com',
+    candidateExperience: '1 Year Exp',
+    candidateQualification: 'Graduate (B.Com)',
+    candidateSkills: ['Tele-sales', 'Lead Conversion', 'CRM Software', 'Communication'],
+    matchScore: '92%',
+    resumeName: 'Shreya_Kumari_BPO.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '21 Sep 2026', note: 'Application received', completed: true, current: true }
+    ],
+  },
+  {
+    id: 'app-iron-1',
+    jobId: 'job-iron-man',
+    jobTitle: 'Iron Man',
+    company: 'Stark Fabrications & Industrial Works',
+    location: 'Shakurpur, Delhi / NCR',
+    salary: '₹25,000 - ₹35,000 / mo',
+    appliedDate: '22 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Rakesh Kumar Sharma',
+    candidatePhone: '+91 98712 34567',
+    candidateEmail: 'rakesh.welder@gmail.com',
+    candidateExperience: '2.5 Years Exp',
+    candidateQualification: 'ITI Welder / Metal Fitting',
+    candidateSkills: ['Metal Fabrication', 'Arc Welding', 'Safety Protocols', 'Housekeeping'],
+    matchScore: '96%',
+    resumeName: 'Rakesh_Fabrication_ITI.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '22 Sep 2026', note: 'Application submitted', completed: true, current: true }
+    ],
+  },
+  {
+    id: 'app-iron-2',
+    jobId: 'job-iron-man',
+    jobTitle: 'Iron Man',
+    company: 'Stark Fabrications & Industrial Works',
+    location: 'Shakurpur, Delhi / NCR',
+    salary: '₹25,000 - ₹35,000 / mo',
+    appliedDate: '22 Sep 2026',
+    status: 'Applied' as const,
+    candidateName: 'Pankaj Verma',
+    candidatePhone: '+91 98109 23841',
+    candidateEmail: 'pankaj.verma91@gmail.com',
+    candidateExperience: '3 Years Exp',
+    candidateQualification: '10th Pass & Technical Certificate',
+    candidateSkills: ['Gas Welding', 'MIG Welding', 'Sheet Metal Cutting'],
+    matchScore: '93%',
+    resumeName: 'Pankaj_Verma_Technical.pdf',
+    statusTimeline: [
+      { stage: 'Applied', date: '22 Sep 2026', note: 'Application submitted', completed: true, current: true }
+    ],
+  },
+  {
     id: 'app-2',
     jobId: 'job-3',
     jobTitle: 'Sales Executive',
@@ -567,6 +756,14 @@ export const INITIAL_APPLICATIONS = [
     salary: '₹22,000 - ₹34,000 / mo + Incentives',
     appliedDate: '15 Sep 2026',
     status: 'Shortlisted' as const,
+    candidateName: 'Rajesh Ranjan',
+    candidatePhone: '+91 98352 11094',
+    candidateEmail: 'rajesh.ranjan@gmail.com',
+    candidateExperience: '2 Years Exp',
+    candidateQualification: 'BBA / Graduate',
+    candidateSkills: ['Field Sales', 'Dealer Management', 'Customer Acquisition'],
+    matchScore: '90%',
+    resumeName: 'Rajesh_Ranjan_Sales.pdf',
     statusTimeline: [
       { stage: 'Applied', date: '15 Sep 2026', note: 'Application received', completed: true },
       { stage: 'Viewed', date: '16 Sep 2026', note: 'Application viewed by Talent Acquisition', completed: true },
@@ -588,6 +785,14 @@ export const INITIAL_APPLICATIONS = [
     salary: '₹20,000 - ₹26,000 / mo',
     appliedDate: '10 Sep 2026',
     status: 'Viewed' as const,
+    candidateName: 'Pooja Kumari',
+    candidatePhone: '+91 91223 88102',
+    candidateEmail: 'pooja.kumari.cs@gmail.com',
+    candidateExperience: '1.5 Years Exp',
+    candidateQualification: 'B.A. English / Graduate',
+    candidateSkills: ['Email Support', 'Chat Support', 'CRM Ticketing', 'Fluent English'],
+    matchScore: '89%',
+    resumeName: 'Pooja_Kumari_Support_CV.pdf',
     statusTimeline: [
       { stage: 'Applied', date: '10 Sep 2026', note: 'Application submitted', completed: true },
       { stage: 'Viewed', date: '12 Sep 2026', note: 'Recruiter opened your resume', completed: true, current: true },

@@ -257,12 +257,14 @@ export const MyActivityTab: React.FC<MyActivityTabProps> = ({
                       </div>
                       <span
                         className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                          app.status === 'Interview'
+                          app.status === 'Interview' || app.status === 'Interviewing'
                             ? 'bg-purple-100 text-purple-700'
                             : app.status === 'Shortlisted'
                             ? 'bg-emerald-100 text-emerald-700'
                             : app.status === 'Viewed'
                             ? 'bg-blue-100 text-blue-700'
+                            : app.status === 'Rejected'
+                            ? 'bg-rose-100 text-rose-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >

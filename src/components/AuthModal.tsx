@@ -38,6 +38,7 @@ interface AuthModalProps {
       companyName?: string;
       designation?: string;
       city?: string;
+      isNewSignUp?: boolean;
     }
   ) => void;
 }
@@ -212,6 +213,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             email: cleanEmail,
             phone: cleanPhone ? `+91 ${cleanPhone}` : undefined,
             city: seekerCity,
+            isNewSignUp: true,
           });
           onClose();
         }, 400);
@@ -255,6 +257,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             companyName: empCompanyName.trim(),
             designation: empDesignation.trim() || 'HR Recruiter',
             city: empCity,
+            isNewSignUp: true,
           });
           onClose();
         }, 400);
@@ -290,14 +293,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setIsSubmitting(false);
       setIsSuccess(true);
 
-      const resolvedName =
-        accountType === 'employer'
-          ? (loginEmailOrPhone.includes('@') ? loginEmailOrPhone.split('@')[0] : 'HR Manager')
-          : accountType === 'admin'
-          ? 'Super Admin Moderator'
-          : loginEmailOrPhone.includes('@')
+      let resolvedName = 'HR Manager';
+      let empCompany = 'Apollo Diagnostics';
+      let empDesignation = 'Verified HR';
+
+      if (accountType === 'employer') {
+        resolvedName = loginEmailOrPhone.includes('@')
+          ? loginEmailOrPhone.split('@')[0].replace(/[._-]/g, ' ')
+          : 'HR Manager';
+        if (loginEmailOrPhone.toLowerCase().includes('tata')) {
+          empCompany = 'Tata Medical Care Center';
+          empDesignation = 'Senior HR Lead';
+        } else if (loginEmailOrPhone.toLowerCase().includes('flipkart')) {
+          empCompany = 'Flipkart Logistics';
+          empDesignation = 'Lead Talent Acquisition';
+        } else if (loginEmailOrPhone.toLowerCase().includes('stark')) {
+          empCompany = 'Stark Fabrications';
+          empDesignation = 'General Manager - HR';
+        } else if (loginEmailOrPhone.toLowerCase().includes('reliance')) {
+          empCompany = 'Reliance Retail';
+          empDesignation = 'Regional HR Lead';
+        } else {
+          empCompany = 'Apollo Diagnostics';
+          empDesignation = 'Verified HR';
+        }
+      } else if (accountType === 'admin') {
+        resolvedName = 'Super Admin Moderator';
+      } else {
+        resolvedName = loginEmailOrPhone.includes('@')
           ? loginEmailOrPhone.split('@')[0]
           : 'Rahul Sharma';
+      }
 
       setSuccessInfo({ mode: accountType, name: resolvedName });
 
@@ -305,6 +331,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         onLoginSuccess(accountType, resolvedName, {
           email: loginEmailOrPhone.includes('@') ? loginEmailOrPhone : undefined,
           phone: !loginEmailOrPhone.includes('@') ? loginEmailOrPhone : undefined,
+          companyName: accountType === 'employer' ? empCompany : undefined,
+          designation: accountType === 'employer' ? empDesignation : undefined,
+          city: 'Patna, Bihar',
         });
         onClose();
       }, 400);
@@ -350,15 +379,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setIsSuccess(true);
       const demoName =
         role === 'employer'
-          ? 'Pooja Verma (Apollo HR)'
+          ? 'Pooja Verma'
           : role === 'admin'
           ? 'Super Admin Moderator'
           : 'Rahul Sharma (Job Seeker)';
 
-      setSuccessInfo({ mode: role, name: demoName });
+      setSuccessInfo({
+        mode: role,
+        name: role === 'employer' ? `${demoName} (Apollo Diagnostics)` : demoName,
+      });
 
       setTimeout(() => {
-        onLoginSuccess(role, demoName);
+        if (role === 'employer') {
+          onLoginSuccess('employer', demoName, {
+            companyName: 'Apollo Diagnostics',
+            designation: 'Senior HR Lead',
+            email: 'pooja.verma@apollodiagnostics.in',
+            phone: '+91 98765 01234',
+            city: 'Patna, Bihar',
+          });
+        } else {
+          onLoginSuccess(role, demoName);
+        }
         onClose();
       }, 400);
     }, 200);
@@ -716,6 +758,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 ) : (
                   /* ================= EMPLOYER SIGNUP ================= */
                   <>
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-[11px] text-amber-200">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                        <span>Creates a <strong>Fresh Clean Database</strong> for your company</span>
+                      </div>
+                      <span className="text-[10px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.5 rounded">0 Old Jobs</span>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1">

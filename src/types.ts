@@ -64,7 +64,10 @@ export interface UserExperienceItem {
   currentSalary: string;
   companyName: string;
   startDate: string;
+  endDate?: string;
   jobTitle: string;
+  description?: string;
+  isCurrent?: boolean;
 }
 
 export interface UserProfile {
@@ -96,9 +99,19 @@ export interface UserProfile {
   preferredLocations: string[];
   workPreference: 'All' | 'Work From Home' | 'In-Office' | 'Hybrid';
   completionPercentage: number;
+  linkedInUrl?: string;
+  linkedInHeadline?: string;
+  linkedInImportedAt?: string;
 }
 
-export type ApplicationStatus = 'Applied' | 'Viewed' | 'Shortlisted' | 'Interview' | 'Rejected';
+export type ApplicationStatus =
+  | 'Applied'
+  | 'Viewed'
+  | 'Shortlisted'
+  | 'Interview'
+  | 'Interviewing'
+  | 'Rejected'
+  | 'Selected';
 
 export interface Application {
   id: string;
@@ -121,6 +134,14 @@ export interface Application {
     designation: string;
     phone: string;
   };
+  candidateName?: string;
+  candidatePhone?: string;
+  candidateEmail?: string;
+  candidateExperience?: string;
+  candidateQualification?: string;
+  candidateSkills?: string[];
+  matchScore?: string;
+  resumeName?: string;
 }
 
 export interface HRRequest {
@@ -153,3 +174,111 @@ export interface JobPreference {
   workMode: string;
   isConfigured: boolean;
 }
+
+export type QuickReplyActionType = 'Shortlisted' | 'Rejected' | 'Interviewing';
+
+export interface QuickReplyTemplate {
+  id: string;
+  actionType: QuickReplyActionType;
+  title: string;
+  category: string;
+  subject: string;
+  messageTemplate: string;
+  suggestedTags?: string[];
+  isCustom?: boolean;
+}
+
+export interface EmployerProfile {
+  companyName: string;
+  companyInitials: string;
+  hubName: string;
+  hrName: string;
+  designation: string;
+  workEmail: string;
+  phone: string;
+  officeAddress: string;
+  city: string;
+  state: string;
+  pincode: string;
+  cinNumber?: string;
+  gstin?: string;
+  industry: string;
+  website?: string;
+  isVerified: boolean;
+  completionPercent: number;
+}
+
+export type PaymentModeType =
+  | 'upi_qr'
+  | 'cards'
+  | 'netbanking'
+  | 'bank_transfer'
+  | 'cash_desk';
+
+export interface PaymentModeConfig {
+  id: PaymentModeType | string;
+  name: string;
+  description: string;
+  isEnabled: boolean;
+  isPopular?: boolean;
+  discountOrOffer?: string;
+  instructionNote?: string;
+}
+
+export interface QRCodeConfig {
+  enabled: boolean;
+  upiId: string;
+  payeeName: string;
+  merchantCode?: string;
+  qrImageUrl?: string;
+  qrTitle: string;
+  qrSubtitle: string;
+  allowReceiptUpload: boolean;
+  supportPhoneForUpi?: string;
+  transactionNote?: string;
+  qrThemeColor?: string;
+}
+
+export interface PremiumPlan {
+  id: string;
+  name: string;
+  price: string;
+  originalPrice: string;
+  duration: string;
+  popular: boolean;
+  badge?: string;
+  isEnabled?: boolean;
+  // Active Time & Validity features
+  activeTime?: string; // e.g. "30 Days Validity", "90 Days Full Access"
+  validityDays?: number; // e.g. 30, 90, 180, 365
+  activeStatus?: 'Active Now' | 'Limited Time' | 'Expiring Soon' | 'Always Active' | 'Paused';
+  activeScheduleText?: string; // e.g. "Instant 24x7 Activation"
+  timerCountdownHours?: number; // e.g. 24 or 48 for countdown banner
+  showActiveTimer?: boolean;
+  paymentModesAllowed?: string[];
+  qrDiscountAmount?: string;
+}
+
+export interface PlatformSettings {
+  platformName: string;
+  supportPhone: string;
+  supportEmail: string;
+  supportWhatsApp: string;
+  paymentGatewayMode: 'Simulated UPI' | 'Razorpay Live' | 'PhonePe UPI' | 'Cashfree';
+  ctaButtonText: string;
+  ctaSecurityNote: string;
+  allowDirectRecruiterCalls: boolean;
+  requireJobModeration: boolean;
+  autoVerifyHospitalJobs: boolean;
+  freeDailyCandidateUnlocks: number;
+  bannerAnnouncement?: string;
+  showAnnouncement: boolean;
+  // Payment Modes & QR Code config
+  paymentModes?: PaymentModeConfig[];
+  qrCodeConfig?: QRCodeConfig;
+  activePlanOfferBadge?: string;
+  activePlanGlobalTimerEnabled?: boolean;
+  activePlanGlobalTimerHours?: number;
+  activePlanGlobalTimerNote?: string;
+}
+

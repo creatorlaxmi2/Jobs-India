@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { UserProfile, UserEducation, UserExperienceItem } from '../types';
 import { SUPPORT_CONTENT } from '../data/supportData';
+import { LinkedInParserModal } from './LinkedInParserModal';
 
 interface ProfileTabProps {
   profile: UserProfile;
@@ -76,6 +77,15 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const [newCertInput, setNewCertInput] = useState('');
   const [showResumeViewer, setShowResumeViewer] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [isLinkedInModalOpen, setIsLinkedInModalOpen] = useState(false);
+
+  const handleLinkedInImportComplete = (updated: UserProfile) => {
+    setFormData(updated);
+    onUpdateProfile(updated);
+    showToast(
+      `LinkedIn imported! ${updated.experiences?.length || 1} positions & ${updated.skills?.length || 0} skills updated.`
+    );
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -170,6 +180,11 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           jobTitle: 'Nursing Supervisor',
         };
 
+  const allExperiences: UserExperienceItem[] =
+    formData.experiences && formData.experiences.length > 0
+      ? formData.experiences
+      : [primaryExperience];
+
   const knownLanguages = formData.knownLanguages || ['English', 'Hindi'];
   const skillsList = formData.skills && formData.skills.length > 0 ? formData.skills : ['Patient Care', 'Staff Nurse'];
   const assetsList = formData.assets && formData.assets.length > 0 ? formData.assets : ['Smartphone (Android)', 'Two Wheeler (Scooty)'];
@@ -248,6 +263,14 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               <h1 className="text-lg sm:text-xl font-bold text-[#1E2544] tracking-tight">
                 {profile.name}
               </h1>
+              {profile.linkedInHeadline && (
+                <p className="text-xs text-[#0A66C2] font-bold line-clamp-1 flex items-center gap-1">
+                  <svg className="w-3 h-3 fill-[#0A66C2] flex-shrink-0" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.65 1.65 0 0 0-1.66 1.66 1.66 1.66 0 0 0 1.66 1.66 1.66 1.66 0 0 0 1.66-1.66Z" />
+                  </svg>
+                  <span className="truncate">{profile.linkedInHeadline}</span>
+                </p>
+              )}
               <p className="text-xs sm:text-sm text-gray-500 font-medium">
                 {profile.phone}
               </p>
@@ -267,6 +290,45 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             <SquarePen className="w-5 h-5 stroke-[2]" />
             <span className="text-[11px] font-bold mt-0.5">Edit</span>
           </button>
+        </section>
+
+        {/* 2. IMPORT FROM LINKEDIN HERO BANNER */}
+        <section
+          id="profile-linkedin-banner"
+          className="bg-gradient-to-r from-[#0A66C2] via-[#0055A5] to-[#0A66C2] rounded-2xl p-4 text-white shadow-md relative overflow-hidden"
+        >
+          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-lg pointer-events-none" />
+          <div className="flex items-center justify-between gap-3 relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-xs flex-shrink-0">
+                <svg className="w-6 h-6 fill-[#0A66C2]" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.65 1.65 0 0 0-1.66 1.66 1.66 1.66 0 0 0 1.66 1.66 1.66 1.66 0 0 0 1.66-1.66Z" />
+                </svg>
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold tracking-tight">Import from LinkedIn</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-wider text-white">
+                    {profile.linkedInImportedAt ? 'Connected' : '1-Click'}
+                  </span>
+                </div>
+                <p className="text-xs text-blue-100 leading-snug">
+                  {profile.linkedInImportedAt
+                    ? `Synced • ${profile.experiences?.length || 1} positions & ${profile.skills?.length || 0} skills active`
+                    : 'Auto-import your career history, past job roles & verified skills'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="import-from-linkedin-btn"
+              onClick={() => setIsLinkedInModalOpen(true)}
+              className="px-3.5 py-2 bg-white hover:bg-blue-50 text-[#0A66C2] rounded-xl text-xs font-black shadow-xs transition-all flex-shrink-0 cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <span>{profile.linkedInImportedAt ? 'Re-sync' : 'Import'}</span>
+            </button>
+          </div>
         </section>
 
         {/* 2. COMPLETE YOUR PROFILE NOW BANNER (Orange circular progress) */}
@@ -320,6 +382,25 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
         {/* 3. HORIZONTAL QUICK CARDS CAROUSEL (Skills, Assets, About me, Education, Experiences) */}
         <section id="profile-quick-actions" className="overflow-hidden">
           <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-none -mx-1 px-1">
+            {/* Card: LinkedIn Import */}
+            <div className="flex-shrink-0 w-[108px] bg-gradient-to-b from-blue-50/80 to-white rounded-2xl border border-blue-200/80 p-3 shadow-xs flex flex-col items-center justify-between text-center min-h-[124px]">
+              <div className="w-11 h-11 rounded-full bg-[#0A66C2] flex items-center justify-center text-white mb-1 shadow-xs">
+                <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.65 1.65 0 0 0-1.66 1.66 1.66 1.66 0 0 0 1.66-1.66c0-.92-.74-1.66-1.66-1.66Z" />
+                </svg>
+              </div>
+              <span className="text-xs font-bold text-[#0A66C2] mb-2 truncate max-w-full">
+                LinkedIn
+              </span>
+              <button
+                id="quick-linkedin-import-btn"
+                onClick={() => setIsLinkedInModalOpen(true)}
+                className="w-full py-1 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white text-xs font-bold transition-colors cursor-pointer"
+              >
+                Import
+              </button>
+            </div>
+
             {/* Card: Skills */}
             <div className="flex-shrink-0 w-[108px] bg-white rounded-2xl border border-gray-100 p-3 shadow-xs flex flex-col items-center justify-between text-center min-h-[124px]">
               <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 mb-1">
@@ -473,6 +554,32 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                 {profile.birthday || '2002-04-02'}
               </span>
             </div>
+
+            {profile.linkedInUrl && (
+              <div>
+                <span className="text-xs text-gray-400 font-medium block">
+                  LinkedIn Profile
+                </span>
+                <a
+                  href={
+                    profile.linkedInUrl.startsWith('http')
+                      ? profile.linkedInUrl
+                      : `https://${profile.linkedInUrl}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A66C2] hover:underline mt-0.5"
+                >
+                  <svg className="w-3.5 h-3.5 fill-[#0A66C2]" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.65 1.65 0 0 0-1.66 1.66 1.66 1.66 0 0 0 1.66-1.66c0-.92-.74-1.66-1.66-1.66Z" />
+                  </svg>
+                  <span className="truncate max-w-[260px]">{profile.linkedInUrl}</span>
+                  <span className="text-[10px] px-1.5 py-0.2 bg-blue-100 text-[#0A66C2] rounded font-bold">
+                    Verified
+                  </span>
+                </a>
+              </div>
+            )}
           </div>
         </section>
 
@@ -565,26 +672,44 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           </div>
         </section>
 
-        {/* 7. EXPERIENCES SECTION (2-Column Subcard) */}
+        {/* 7. EXPERIENCES SECTION (Multi-position support + LinkedIn Import) */}
         <section
           id="profile-experiences"
           className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs space-y-3"
         >
           <div className="flex items-center justify-between pb-1">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <Briefcase className="w-5 h-5 text-gray-500 stroke-[2]" />
               <h3 className="text-base font-bold text-[#1E2544]">
                 Experiences
               </h3>
+              {allExperiences.length > 1 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2A48C8]">
+                  {allExperiences.length} Roles
+                </span>
+              )}
             </div>
-            <button
-              id="edit-experiences-btn"
-              onClick={() => handleOpenEdit('experience')}
-              className="text-[#2A48C8] hover:text-[#1E3A8A] transition-colors p-1"
-              title="Edit Experiences"
-            >
-              <SquarePen className="w-5 h-5 stroke-[2]" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                id="experience-import-linkedin-btn"
+                onClick={() => setIsLinkedInModalOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] text-xs font-bold transition-colors cursor-pointer"
+                title="Import Experiences from LinkedIn"
+              >
+                <svg className="w-3.5 h-3.5 fill-[#0A66C2]" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.65 1.65 0 0 0-1.66 1.66 1.66 1.66 0 0 0 1.66-1.66c0-.92-.74-1.66-1.66-1.66Z" />
+                </svg>
+                <span>Import</span>
+              </button>
+              <button
+                id="edit-experiences-btn"
+                onClick={() => handleOpenEdit('experience')}
+                className="text-[#2A48C8] hover:text-[#1E3A8A] transition-colors p-1"
+                title="Edit Experiences"
+              >
+                <SquarePen className="w-5 h-5 stroke-[2]" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -606,68 +731,93 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               </span>
             </div>
 
-            {/* 2-Column Experience Details Subcard */}
-            <div className="bg-white border border-gray-200 rounded-xl p-4 mt-3 grid grid-cols-2 gap-y-4 gap-x-3">
-              {/* Left Column */}
-              <div className="space-y-4">
-                <div>
-                  <span className="text-xs text-gray-400 font-medium block">
-                    Work Type
-                  </span>
-                  <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
-                    {primaryExperience.workType || 'Full Time'}
-                  </span>
+            {/* Experience Details List */}
+            {allExperiences.map((exp, expIdx) => (
+              <div
+                key={expIdx}
+                className="bg-white border border-gray-200 rounded-xl p-4 mt-2.5 space-y-3"
+              >
+                {allExperiences.length > 1 && (
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <span className="text-xs font-bold text-[#1E2544] flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#0A66C2]" />
+                      <span>{exp.jobTitle || 'Role'}</span>
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                      {exp.startDate} - {exp.endDate || 'Present'}
+                    </span>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-y-4 gap-x-3">
+                  {/* Left Column */}
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">
+                        Work Type
+                      </span>
+                      <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
+                        {exp.workType || 'Full Time'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">
+                        Current Salary
+                      </span>
+                      <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
+                        {exp.currentSalary ? `₹${exp.currentSalary}` : '9500'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">
+                        Start Date
+                      </span>
+                      <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
+                        {exp.startDate || '2025'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">
+                        Industry
+                      </span>
+                      <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
+                        {exp.industry || 'Hospitality'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">
+                        Company Name
+                      </span>
+                      <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
+                        {exp.companyName || 'Oxig'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">
+                        Job Title
+                      </span>
+                      <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
+                        {exp.jobTitle || 'Nursing Supervisor'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <span className="text-xs text-gray-400 font-medium block">
-                    Current Salary
-                  </span>
-                  <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
-                    {primaryExperience.currentSalary || '9500'}
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-xs text-gray-400 font-medium block">
-                    Start Date
-                  </span>
-                  <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
-                    {primaryExperience.startDate || '2025'}
-                  </span>
-                </div>
+                {exp.description && (
+                  <div className="pt-2 border-t border-gray-100 text-[11px] text-gray-600 leading-snug">
+                    <span className="font-semibold text-gray-700 block mb-0.5">Responsibilities:</span>
+                    {exp.description}
+                  </div>
+                )}
               </div>
-
-              {/* Right Column */}
-              <div className="space-y-4">
-                <div>
-                  <span className="text-xs text-gray-400 font-medium block">
-                    Industry
-                  </span>
-                  <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
-                    {primaryExperience.industry || 'Hospitality'}
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-xs text-gray-400 font-medium block">
-                    Company Name
-                  </span>
-                  <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
-                    {primaryExperience.companyName || 'Oxig'}
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-xs text-gray-400 font-medium block">
-                    Job Title
-                  </span>
-                  <span className="text-sm font-medium text-[#1E2544] block mt-0.5">
-                    {primaryExperience.jobTitle || 'Nursing Supervisor'}
-                  </span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
@@ -677,20 +827,36 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs space-y-3"
         >
           <div className="flex items-center justify-between pb-1">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <Wrench className="w-5 h-5 text-gray-500 stroke-[2]" />
               <h3 className="text-base font-bold text-[#1E2544]">
                 Skills
               </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2A48C8]">
+                {skillsList.length}
+              </span>
             </div>
-            <button
-              id="edit-skills-btn"
-              onClick={() => handleOpenEdit('skills')}
-              className="text-[#2A48C8] hover:text-[#1E3A8A] transition-colors p-1"
-              title="Edit Skills"
-            >
-              <SquarePen className="w-5 h-5 stroke-[2]" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                id="skills-import-linkedin-btn"
+                onClick={() => setIsLinkedInModalOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] text-xs font-bold transition-colors cursor-pointer"
+                title="Import Skills from LinkedIn"
+              >
+                <svg className="w-3.5 h-3.5 fill-[#0A66C2]" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.65 1.65 0 0 0-1.66 1.66 1.66 1.66 0 0 0 1.66 1.66 1.66 1.66 0 0 0 1.66-1.66c0-.92-.74-1.66-1.66-1.66Z" />
+                </svg>
+                <span>Import</span>
+              </button>
+              <button
+                id="edit-skills-btn"
+                onClick={() => handleOpenEdit('skills')}
+                className="text-[#2A48C8] hover:text-[#1E3A8A] transition-colors p-1"
+                title="Edit Skills"
+              >
+                <SquarePen className="w-5 h-5 stroke-[2]" />
+              </button>
+            </div>
           </div>
 
           <div>
@@ -1908,6 +2074,14 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           </div>
         </div>
       )}
+
+      {/* LINKEDIN PARSER MODAL */}
+      <LinkedInParserModal
+        isOpen={isLinkedInModalOpen}
+        onClose={() => setIsLinkedInModalOpen(false)}
+        currentProfile={formData}
+        onImportComplete={handleLinkedInImportComplete}
+      />
     </div>
   );
 };

@@ -26,20 +26,57 @@ import {
   Lock,
   ListOrdered,
   LayoutList,
+  CreditCard,
+  Sliders,
+  Sparkles,
+  Database,
+  UserPlus,
+  Trash2,
+  RefreshCw,
+  Eraser,
+  AlertCircle,
 } from 'lucide-react';
-import { Job, RecruiterContact } from '../types';
-import { getJobRecruiter } from '../data/mockJobs';
+import { Job, RecruiterContact, PremiumPlan, PlatformSettings, Application, UserProfile, EmployerProfile } from '../types';
+import { getJobRecruiter, INITIAL_JOBS } from '../data/mockJobs';
+import {
+  loadStoredPremiumPlans,
+  saveStoredPremiumPlans,
+  loadStoredPlatformSettings,
+  saveStoredPlatformSettings,
+} from '../data/settingsData';
+import { AdminPlansAndSettings } from './AdminPlansAndSettings';
+import { AdminLeadsDatabase } from './AdminLeadsDatabase';
+import {
+  JobSeekerLead,
+  EmployerLead,
+  loadStoredJobSeekerLeads,
+  saveStoredJobSeekerLeads,
+  loadStoredEmployerLeads,
+  saveStoredEmployerLeads,
+  syncLiveJobSeekerLeads,
+  syncLiveEmployerLeads,
+} from '../data/leadsDatabase';
 
 interface AdminPortalProps {
   jobs: Job[];
   onVerifyJob: (jobId: string) => void;
   onRemoveJob: (jobId: string) => void;
+  onCleanDummyJobs?: () => void;
+  onClearAllJobs?: () => void;
+  onRestoreSampleJobs?: () => void;
   onOpenSwitchMode: () => void;
   onOpenAdminSecurity?: (view?: 'login' | 'reset') => void;
   onLockAdminSession?: () => void;
+  plans?: PremiumPlan[];
+  settings?: PlatformSettings;
+  onSavePlans?: (updatedPlans: PremiumPlan[]) => void;
+  onSaveSettings?: (updatedSettings: PlatformSettings) => void;
+  applications?: Application[];
+  userProfile?: UserProfile;
+  employerProfile?: EmployerProfile;
 }
 
-interface RecruiterQueueItem {
+export interface RecruiterQueueItem {
   id: string;
   name: string;
   designation: string;
@@ -53,102 +90,218 @@ interface RecruiterQueueItem {
   associatedJobsCount: number;
 }
 
+export const DEFAULT_RECRUITER_QUEUE: RecruiterQueueItem[] = [
+  {
+    id: 'rec-1',
+    name: 'Dr. Alok Verma',
+    designation: 'Senior Talent Acquisition Lead',
+    company: 'Medanta Super Speciality Hospital',
+    phone: '+91 98350 12845',
+    email: 'alok.verma@medanta.org',
+    kycDocument: 'CIN-U85110DL2004PLC128314 (Hospital Reg)',
+    companyGstin: '10AAACM1234F1Z8',
+    isVerified: true,
+    registeredDate: '15 Sep 2026',
+    associatedJobsCount: 2,
+  },
+  {
+    id: 'rec-2',
+    name: 'Pooja Sharma',
+    designation: 'Head HR & Clinical Staffing',
+    company: 'Ruban Memorial Hospital',
+    phone: '+91 94710 44820',
+    email: 'hr.pooja@rubanhospital.com',
+    kycDocument: 'PAN-AAACR1294K (Clinical Director Auth)',
+    companyGstin: '10AAACR1294K1Z2',
+    isVerified: true,
+    registeredDate: '18 Sep 2026',
+    associatedJobsCount: 1,
+  },
+  {
+    id: 'rec-3',
+    name: 'Vikash Kumar Mishra',
+    designation: 'Regional HR Manager - Bihar Circle',
+    company: 'Bajaj Finserv Consumer Finance',
+    phone: '+91 99342 55910',
+    email: 'vikash.mishra@bajajfinserv.in',
+    kycDocument: 'CIN-L65923PN2007PLC130075',
+    companyGstin: '10AAACB1845P1Z7',
+    isVerified: true,
+    registeredDate: '12 Sep 2026',
+    associatedJobsCount: 1,
+  },
+  {
+    id: 'rec-4',
+    name: 'Neha Kumari',
+    designation: 'Talent Partner - Patna Hub',
+    company: 'Flipkart Customer Connect',
+    phone: '+91 91223 88102',
+    email: 'neha.kumari@flipkartcareers.in',
+    kycDocument: 'CIN-U51109KA2012PTC066107',
+    companyGstin: '10AAACF8812D1ZX',
+    isVerified: true,
+    registeredDate: '14 Sep 2026',
+    associatedJobsCount: 1,
+  },
+  {
+    id: 'rec-5',
+    name: 'Suman Saurabh',
+    designation: 'HR Executive',
+    company: 'Patliputra Diagnostics & Labs',
+    phone: '+91 93341 02948',
+    email: 'suman.hr@patliputradiagnostics.in',
+    kycDocument: 'Aadhaar Verified • Lab License #BR-PT-8821',
+    companyGstin: '10AAACD7712N1Z4',
+    isVerified: false,
+    registeredDate: 'Today, 09:30 AM',
+    associatedJobsCount: 1,
+  },
+  {
+    id: 'rec-6',
+    name: 'Rajesh Kumar Sinha',
+    designation: 'Area Recruitment Manager',
+    company: 'Swiggy Instamart Bihar',
+    phone: '+91 94318 90123',
+    email: 'rajesh.sinha@swiggy.in',
+    kycDocument: 'Corporate PAN & Work ID #SWG-9982',
+    companyGstin: '10AAGCS1920L1Z1',
+    isVerified: false,
+    registeredDate: 'Today, 10:15 AM',
+    associatedJobsCount: 1,
+  },
+];
+
 export const AdminPortal: React.FC<AdminPortalProps> = ({
   jobs,
   onVerifyJob,
   onRemoveJob,
+  onCleanDummyJobs,
+  onClearAllJobs,
+  onRestoreSampleJobs,
   onOpenSwitchMode,
   onOpenAdminSecurity,
   onLockAdminSession,
+  plans: externalPlans,
+  settings: externalSettings,
+  onSavePlans: externalOnSavePlans,
+  onSaveSettings: externalOnSaveSettings,
+  applications = [],
+  userProfile,
+  employerProfile,
 }) => {
-  const [adminSubTab, setAdminSubTab] = useState<'job-postings' | 'recruiter-verification'>('job-postings');
+  const [adminSubTab, setAdminSubTab] = useState<'job-postings' | 'recruiter-verification' | 'database-leads' | 'plans-settings'>('job-postings');
   const [activeFilter, setActiveFilter] = useState<'all' | 'verified' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'numbered-cards' | 'simple-list'>('numbered-cards');
   const [customVerifiedRecruiters, setCustomVerifiedRecruiters] = useState<Record<string, boolean>>({});
 
-  // Dedicated Recruiter Queue state
-  const [recruiterQueue, setRecruiterQueue] = useState<RecruiterQueueItem[]>([
-    {
-      id: 'rec-1',
-      name: 'Dr. Alok Verma',
-      designation: 'Senior Talent Acquisition Lead',
-      company: 'Medanta Super Speciality Hospital',
-      phone: '+91 98350 12845',
-      email: 'alok.verma@medanta.org',
-      kycDocument: 'CIN-U85110DL2004PLC128314 (Hospital Reg)',
-      companyGstin: '10AAACM1234F1Z8',
-      isVerified: true,
-      registeredDate: '15 Sep 2026',
-      associatedJobsCount: 2,
-    },
-    {
-      id: 'rec-2',
-      name: 'Pooja Sharma',
-      designation: 'Head HR & Clinical Staffing',
-      company: 'Ruban Memorial Hospital',
-      phone: '+91 94710 44820',
-      email: 'hr.pooja@rubanhospital.com',
-      kycDocument: 'PAN-AAACR1294K (Clinical Director Auth)',
-      companyGstin: '10AAACR1294K1Z2',
-      isVerified: true,
-      registeredDate: '18 Sep 2026',
-      associatedJobsCount: 1,
-    },
-    {
-      id: 'rec-3',
-      name: 'Vikash Kumar Mishra',
-      designation: 'Regional HR Manager - Bihar Circle',
-      company: 'Bajaj Finserv Consumer Finance',
-      phone: '+91 99342 55910',
-      email: 'vikash.mishra@bajajfinserv.in',
-      kycDocument: 'CIN-L65923PN2007PLC130075',
-      companyGstin: '10AAACB1845P1Z7',
-      isVerified: true,
-      registeredDate: '12 Sep 2026',
-      associatedJobsCount: 1,
-    },
-    {
-      id: 'rec-4',
-      name: 'Neha Kumari',
-      designation: 'Talent Partner - Patna Hub',
-      company: 'Flipkart Customer Connect',
-      phone: '+91 91223 88102',
-      email: 'neha.kumari@flipkartcareers.in',
-      kycDocument: 'CIN-U51109KA2012PTC066107',
-      companyGstin: '10AAACF8812D1ZX',
-      isVerified: true,
-      registeredDate: '14 Sep 2026',
-      associatedJobsCount: 1,
-    },
-    {
-      id: 'rec-5',
-      name: 'Suman Saurabh',
-      designation: 'HR Executive',
-      company: 'Patliputra Diagnostics & Labs',
-      phone: '+91 93341 02948',
-      email: 'suman.hr@patliputradiagnostics.in',
-      kycDocument: 'Aadhaar Verified • Lab License #BR-PT-8821',
-      companyGstin: '10AAACD7712N1Z4',
-      isVerified: false,
-      registeredDate: 'Today, 09:30 AM',
-      associatedJobsCount: 1,
-    },
-    {
-      id: 'rec-6',
-      name: 'Rajesh Kumar Sinha',
-      designation: 'Area Recruitment Manager',
-      company: 'Swiggy Instamart Bihar',
-      phone: '+91 94318 90123',
-      email: 'rajesh.sinha@swiggy.in',
-      kycDocument: 'Corporate PAN & Work ID #SWG-9982',
-      companyGstin: '10AAGCS1920L1Z1',
-      isVerified: false,
-      registeredDate: 'Today, 10:15 AM',
-      associatedJobsCount: 1,
-    },
-  ]);
+  // Database Leads State (Synchronized with live applications & user profiles)
+  const [jobSeekerLeads, setJobSeekerLeads] = useState<JobSeekerLead[]>(() => {
+    const stored = loadStoredJobSeekerLeads();
+    return syncLiveJobSeekerLeads(stored, applications, userProfile);
+  });
+
+  const [employerLeads, setEmployerLeads] = useState<EmployerLead[]>(() => {
+    const stored = loadStoredEmployerLeads();
+    return syncLiveEmployerLeads(stored, jobs, employerProfile);
+  });
+
+  const handleUpdateJobSeekerLeadStatus = (leadId: string, newStatus: JobSeekerLead['leadStatus']) => {
+    setJobSeekerLeads((prev) => {
+      const updated = prev.map((l) => (l.id === leadId ? { ...l, leadStatus: newStatus } : l));
+      saveStoredJobSeekerLeads(updated);
+      return updated;
+    });
+    setNotification(`✅ Updated candidate lead status to "${newStatus}"`);
+  };
+
+  const handleUpdateEmployerLeadStatus = (leadId: string, newStatus: EmployerLead['leadStatus']) => {
+    setEmployerLeads((prev) => {
+      const updated = prev.map((l) => (l.id === leadId ? { ...l, leadStatus: newStatus } : l));
+      saveStoredEmployerLeads(updated);
+      return updated;
+    });
+    setNotification(`✅ Updated employer lead status to "${newStatus}"`);
+  };
+
+  const handleAddJobSeekerLead = (newLeadData: Omit<JobSeekerLead, 'id'>) => {
+    const newLead: JobSeekerLead = {
+      ...newLeadData,
+      id: `lead-js-${Date.now()}`,
+    };
+    setJobSeekerLeads((prev) => {
+      const updated = [newLead, ...prev];
+      saveStoredJobSeekerLeads(updated);
+      return updated;
+    });
+  };
+
+  const handleAddEmployerLead = (newLeadData: Omit<EmployerLead, 'id'>) => {
+    const newLead: EmployerLead = {
+      ...newLeadData,
+      id: `lead-emp-${Date.now()}`,
+    };
+    setEmployerLeads((prev) => {
+      const updated = [newLead, ...prev];
+      saveStoredEmployerLeads(updated);
+      return updated;
+    });
+  };
+
+  // Plans & Platform Settings state
+  const [plans, setPlans] = useState<PremiumPlan[]>(() => externalPlans || loadStoredPremiumPlans());
+  const [settings, setSettings] = useState<PlatformSettings>(() => externalSettings || loadStoredPlatformSettings());
+
+  const handleSavePlans = (updated: PremiumPlan[]) => {
+    setPlans(updated);
+    saveStoredPremiumPlans(updated);
+    if (externalOnSavePlans) externalOnSavePlans(updated);
+    setNotification('🎉 Subscription plans and pricing saved successfully!');
+  };
+
+  const handleSaveSettings = (updated: PlatformSettings) => {
+    setSettings(updated);
+    saveStoredPlatformSettings(updated);
+    if (externalOnSaveSettings) externalOnSaveSettings(updated);
+    setNotification('🎉 Platform settings & contacts updated successfully!');
+  };
+
+  // Dedicated Recruiter Queue state with localStorage persistence
+  const [recruiterQueue, setRecruiterQueue] = useState<RecruiterQueueItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('jobs_india_admin_recruiters_queue');
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_RECRUITER_QUEUE;
+  });
+
+  const saveRecruiterQueue = (updated: RecruiterQueueItem[]) => {
+    setRecruiterQueue(updated);
+    try {
+      localStorage.setItem('jobs_india_admin_recruiters_queue', JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+  };
+
+  const [isCleanDatabaseModalOpen, setIsCleanDatabaseModalOpen] = useState(false);
+
+  // Identify Dummy vs Real items
+  const sampleJobIds = useMemo(() => new Set(INITIAL_JOBS.map((j) => j.id)), []);
+  const dummyJobs = useMemo(
+    () => jobs.filter((j) => sampleJobIds.has(j.id) || j.id.startsWith('sample-')),
+    [jobs, sampleJobIds]
+  );
+  const dummyRecruiterIds = useMemo(() => new Set(DEFAULT_RECRUITER_QUEUE.map((r) => r.id)), []);
+  const dummyRecruiters = useMemo(
+    () => recruiterQueue.filter((r) => dummyRecruiterIds.has(r.id) || r.id.startsWith('dummy-')),
+    [recruiterQueue, dummyRecruiterIds]
+  );
 
   const notify = (msg: string) => {
     setNotification(msg);
@@ -160,28 +313,73 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     notify(`Copied ${label}: ${text}`);
   };
 
+  const handleCleanDummyJobs = () => {
+    if (onCleanDummyJobs) {
+      onCleanDummyJobs();
+    }
+    notify(`🧹 Cleaned all ${dummyJobs.length} dummy job postings! Database is now fresh.`);
+  };
+
+  const handleClearAllJobs = () => {
+    if (onClearAllJobs) {
+      onClearAllJobs();
+    }
+    notify('🧹 All job listings have been cleared.');
+  };
+
+  const handleRestoreSampleJobs = () => {
+    if (onRestoreSampleJobs) {
+      onRestoreSampleJobs();
+    }
+    notify('🔄 Restored default demo job listings.');
+  };
+
+  const handleCleanDummyRecruiters = () => {
+    const cleaned = recruiterQueue.filter((r) => !dummyRecruiterIds.has(r.id) && !r.id.startsWith('dummy-'));
+    saveRecruiterQueue(cleaned);
+    notify(`🧹 Cleaned all ${dummyRecruiters.length} dummy recruiters from moderation queue!`);
+  };
+
+  const handleClearAllRecruiters = () => {
+    saveRecruiterQueue([]);
+    notify('🧹 Cleared all recruiters from moderation queue.');
+  };
+
+  const handleRestoreSampleRecruiters = () => {
+    saveRecruiterQueue(DEFAULT_RECRUITER_QUEUE);
+    notify('🔄 Restored default demo recruiters queue.');
+  };
+
+  const handleCleanAllDummyData = () => {
+    handleCleanDummyJobs();
+    handleCleanDummyRecruiters();
+    setIsCleanDatabaseModalOpen(false);
+    notify('🧹 Successfully cleaned both Dummy Job Postings and Dummy Recruiters!');
+  };
+
   const handleVerifyRecruiter = (recruiterId: string, name: string) => {
-    setRecruiterQueue((prev) =>
-      prev.map((r) => (r.id === recruiterId ? { ...r, isVerified: true } : r))
+    const updated = recruiterQueue.map((r) =>
+      r.id === recruiterId ? { ...r, isVerified: true } : r
     );
+    saveRecruiterQueue(updated);
     notify(`Verified Recruiter "${name}"! Badge updated across candidate search.`);
   };
 
   const handleRejectRecruiter = (recruiterId: string, name: string) => {
-    setRecruiterQueue((prev) => prev.filter((r) => r.id !== recruiterId));
+    const updated = recruiterQueue.filter((r) => r.id !== recruiterId);
+    saveRecruiterQueue(updated);
     notify(`Flagged and removed recruiter profile "${name}".`);
   };
 
   const handleVerifyRecruiterByName = (recruiterName: string, company: string) => {
     setCustomVerifiedRecruiters((prev) => ({ ...prev, [recruiterName]: true }));
-    setRecruiterQueue((prev) =>
-      prev.map((r) =>
-        r.name.toLowerCase() === recruiterName.toLowerCase() ||
-        r.company.toLowerCase() === company.toLowerCase()
-          ? { ...r, isVerified: true }
-          : r
-      )
+    const updated = recruiterQueue.map((r) =>
+      r.name.toLowerCase() === recruiterName.toLowerCase() ||
+      r.company.toLowerCase() === company.toLowerCase()
+        ? { ...r, isVerified: true }
+        : r
     );
+    saveRecruiterQueue(updated);
     notify(`Verified HR Recruiter "${recruiterName}" for ${company}! Status updated.`);
   };
 
@@ -275,6 +473,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <span className="hidden sm:inline">Reset Password</span>
             </button>
 
+            {/* Total Leads Database Top Button */}
+            <button
+              id="admin-topbar-leads-db-btn"
+              onClick={() => setAdminSubTab('database-leads')}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                adminSubTab === 'database-leads'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md border border-blue-400/50'
+                  : 'bg-blue-900/40 hover:bg-blue-800/60 text-blue-200 border border-blue-600/40'
+              }`}
+              title="Total Leads in Database (Job Seekers & Employers)"
+            >
+              <Database className="w-3.5 h-3.5 text-sky-300" />
+              <span className="hidden md:inline">Leads Database</span>
+            </button>
+
+            {/* Plans & Other Settings Top Button */}
+            <button
+              id="admin-topbar-plans-settings-btn"
+              onClick={() => setAdminSubTab('plans-settings')}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                adminSubTab === 'plans-settings'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md border border-pink-400/50'
+                  : 'bg-purple-900/40 hover:bg-purple-800/60 text-purple-200 border border-purple-600/40'
+              }`}
+              title="Edit Choose Your Plan & Other Settings"
+            >
+              <CreditCard className="w-3.5 h-3.5 text-pink-300" />
+              <span className="hidden md:inline">Plans & Settings</span>
+            </button>
+
+            {/* Clean Dummy List Top Button */}
+            <button
+              id="admin-topbar-clean-dummy-btn"
+              onClick={() => setIsCleanDatabaseModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 text-rose-200 border border-rose-700/60 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Clean and remove dummy mock list of Job Postings and Recruiters"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <span className="hidden sm:inline">Clean Dummy List</span>
+              {(dummyJobs.length > 0 || dummyRecruiters.length > 0) && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+
             {/* Lock / Exit Admin Session */}
             <button
               id="admin-lock-btn"
@@ -308,28 +550,171 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {/* Main Admin Dashboard Content */}
       <div className="p-4 space-y-4 max-w-2xl mx-auto">
-        {/* Statistics Tiles */}
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="bg-[#1E293B] p-2.5 sm:p-3 rounded-2xl border border-slate-800">
-            <span className="text-[10px] text-slate-400 block font-semibold">Total Listings</span>
+        {/* Statistics Tiles - Real Overview */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+          <div className="bg-[#1E293B] p-2.5 rounded-2xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 block font-semibold">Listings</span>
             <span className="text-base sm:text-lg font-extrabold text-white">{jobs.length}</span>
           </div>
-          <div className="bg-[#1E293B] p-2.5 sm:p-3 rounded-2xl border border-slate-800">
+          <div className="bg-[#1E293B] p-2.5 rounded-2xl border border-slate-800">
             <span className="text-[10px] text-slate-400 block font-semibold">Verified Jobs</span>
             <span className="text-base sm:text-lg font-extrabold text-[#10B981]">
               {verifiedJobsCount}
             </span>
           </div>
-          <div className="bg-[#1E293B] p-2.5 sm:p-3 rounded-2xl border border-slate-800">
+          <div
+            onClick={() => setAdminSubTab('database-leads')}
+            className="bg-gradient-to-br from-blue-950/80 to-indigo-950/80 p-2.5 rounded-2xl border border-blue-700/50 cursor-pointer hover:border-blue-500 transition-all col-span-2 sm:col-span-1 shadow-xs"
+            title="Click to view Total Leads in Database"
+          >
+            <span className="text-[10px] text-sky-300 block font-extrabold flex items-center justify-center gap-1">
+              <Database className="w-3 h-3 text-sky-400" />
+              Total Leads DB
+            </span>
+            <span className="text-base sm:text-lg font-black text-white">
+              {jobSeekerLeads.length + employerLeads.length}
+            </span>
+            <span className="text-[9px] text-blue-300/80 block">
+              {jobSeekerLeads.length} JS • {employerLeads.length} Emp
+            </span>
+          </div>
+          <div className="bg-[#1E293B] p-2.5 rounded-2xl border border-slate-800">
             <span className="text-[10px] text-slate-400 block font-semibold">Recruiters</span>
             <span className="text-base sm:text-lg font-extrabold text-[#38BDF8]">
               {verifiedRecruitersCount}/{recruiterQueue.length}
             </span>
           </div>
-          <div className="bg-[#1E293B] p-2.5 sm:p-3 rounded-2xl border border-slate-800">
-            <span className="text-[10px] text-slate-400 block font-semibold">Trust Score</span>
-            <span className="text-base sm:text-lg font-extrabold text-[#A855F7]">99.6%</span>
+          <div className="bg-[#1E293B] p-2.5 rounded-2xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 block font-semibold">Active Plans</span>
+            <span className="text-base sm:text-lg font-extrabold text-pink-400">{plans.length}</span>
           </div>
+        </div>
+
+        {/* Clean Dummy Database Action Card */}
+        <div
+          id="admin-clean-dummy-database-banner"
+          className="bg-gradient-to-r from-rose-950/70 via-purple-950/40 to-slate-900 border border-rose-800/50 rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-md"
+        >
+          <div className="flex items-start sm:items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-rose-600/25 border border-rose-500/40 text-rose-300 flex items-center justify-center flex-shrink-0">
+              <Trash2 className="w-4 h-4 text-rose-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-white text-xs">
+                  Clean Dummy List (Job Postings & Recruiters)
+                </span>
+                <span className="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/30">
+                  Moderation Maintenance
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                {dummyJobs.length === 0 && dummyRecruiters.length === 0 ? (
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 inline text-emerald-400" />
+                    All dummy lists are clean! Database has 0 sample mock listings.
+                  </span>
+                ) : (
+                  <>
+                    Detected:{' '}
+                    <span className="font-bold text-rose-300">
+                      {dummyJobs.length} Dummy Job{dummyJobs.length === 1 ? '' : 's'}
+                    </span>{' '}
+                    and{' '}
+                    <span className="font-bold text-rose-300">
+                      {dummyRecruiters.length} Dummy Recruiter{dummyRecruiters.length === 1 ? '' : 's'}
+                    </span>{' '}
+                    in moderation queue.
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              id="admin-clean-dummy-database-btn"
+              onClick={() => setIsCleanDatabaseModalOpen(true)}
+              className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-95 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Eraser className="w-3.5 h-3.5" />
+              <span>Clean Dummy List</span>
+            </button>
+            {dummyJobs.length === 0 && dummyRecruiters.length === 0 && (
+              <button
+                id="admin-restore-demo-all-btn"
+                onClick={() => {
+                  handleRestoreSampleJobs();
+                  handleRestoreSampleRecruiters();
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                title="Restore demo mock jobs and recruiters"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Restore Demo</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Feature Highlight 1: Total Leads in Database (Job Seekers & Employers) */}
+        <div className="bg-gradient-to-r from-blue-950/70 via-indigo-950/50 to-slate-900 border border-blue-800/40 rounded-2xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white text-xs">
+                  Total Leads in Database: {jobSeekerLeads.length + employerLeads.length} Records
+                </span>
+                <span className="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.2 rounded-full border border-blue-500/30">
+                  Job Seekers & Employers
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                {jobSeekerLeads.length} Job Seeker leads & {employerLeads.length} verified Employer leads with mobile, email, resume, and direct WhatsApp actions.
+              </p>
+            </div>
+          </div>
+          <button
+            id="admin-open-leads-db-card-btn"
+            onClick={() => setAdminSubTab('database-leads')}
+            className="flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white text-xs font-extrabold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span>Open Leads Database</span>
+          </button>
+        </div>
+
+        {/* Feature Highlight 2: Choose Your Plan & Other Settings Banner */}
+        <div className="bg-gradient-to-r from-purple-900/40 via-purple-800/20 to-pink-900/30 border border-purple-700/40 rounded-2xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <CreditCard className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white text-xs">
+                  "Choose Your Plan" & Platform Settings
+                </span>
+                <span className="bg-pink-500/20 text-pink-300 text-[10px] font-bold px-2 py-0.2 rounded-full border border-pink-500/30">
+                  Live Editor
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                Update 1M, 3M, 6M pricing, original prices, savings labels, best value badge, and support contacts.
+              </p>
+            </div>
+          </div>
+          <button
+            id="admin-open-plans-settings-card-btn"
+            onClick={() => setAdminSubTab('plans-settings')}
+            className="flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 active:scale-95 text-white text-xs font-extrabold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Edit Plans & Settings</span>
+          </button>
         </div>
 
         {/* Admin Password & Security Access Card */}
@@ -363,90 +748,123 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-[#C084FC]" />
-              <span>Job Postings & Recruiter Verification</span>
+              <span>Admin Management & Configuration</span>
             </h2>
 
-            {/* Status Filter Pills */}
-            <div className="flex gap-1 bg-[#1E293B] p-1 rounded-xl border border-slate-800 text-[11px]">
-              <button
-                onClick={() => setActiveFilter('all')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
-                  activeFilter === 'all' ? 'bg-[#A855F7] text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setActiveFilter('verified')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
-                  activeFilter === 'verified' ? 'bg-[#A855F7] text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Verified
-              </button>
-              <button
-                onClick={() => setActiveFilter('pending')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
-                  activeFilter === 'pending' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Pending
-              </button>
-            </div>
+            {/* Status Filter Pills (Active on job/recruiter moderation) */}
+            {adminSubTab === 'job-postings' || adminSubTab === 'recruiter-verification' ? (
+              <div className="flex gap-1 bg-[#1E293B] p-1 rounded-xl border border-slate-800 text-[11px]">
+                <button
+                  onClick={() => setActiveFilter('all')}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                    activeFilter === 'all' ? 'bg-[#A855F7] text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setActiveFilter('verified')}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                    activeFilter === 'verified' ? 'bg-[#A855F7] text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Verified
+                </button>
+                <button
+                  onClick={() => setActiveFilter('pending')}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                    activeFilter === 'pending' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Pending
+                </button>
+              </div>
+            ) : null}
           </div>
 
-          {/* Sub-Tabs: Job Postings vs Recruiter Verification Queue */}
-          <div className="grid grid-cols-2 gap-2 bg-[#1E293B]/70 p-1 rounded-2xl border border-slate-800">
+          {/* Sub-Tabs: 4-column switcher including Job Postings, Recruiters, Leads Database, Choose Your Plan */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#1E293B]/70 p-1.5 rounded-2xl border border-slate-800">
             <button
+              id="admin-tab-job-postings-btn"
               onClick={() => setAdminSubTab('job-postings')}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 adminSubTab === 'job-postings'
                   ? 'bg-purple-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <Briefcase className="w-3.5 h-3.5" />
-              <span>Job Postings Moderation ({filteredJobs.length})</span>
+              <span>Job Postings ({filteredJobs.length})</span>
             </button>
+
             <button
+              id="admin-tab-recruiter-queue-btn"
               onClick={() => setAdminSubTab('recruiter-verification')}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 adminSubTab === 'recruiter-verification'
                   ? 'bg-purple-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <UserCheck className="w-3.5 h-3.5" />
-              <span>Recruiter Verification ({filteredRecruiters.length})</span>
+              <span>Recruiters ({filteredRecruiters.length})</span>
+            </button>
+
+            <button
+              id="admin-tab-database-leads-btn"
+              onClick={() => setAdminSubTab('database-leads')}
+              className={`py-2 px-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                adminSubTab === 'database-leads'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md ring-1 ring-blue-400/50'
+                  : 'text-sky-300 hover:text-white bg-blue-950/40 hover:bg-blue-900/60 border border-blue-900/40'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5 text-sky-400" />
+              <span>Total Leads ({jobSeekerLeads.length + employerLeads.length})</span>
+            </button>
+
+            <button
+              id="admin-tab-plans-settings-btn"
+              onClick={() => setAdminSubTab('plans-settings')}
+              className={`py-2 px-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                adminSubTab === 'plans-settings'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md ring-1 ring-pink-400/50'
+                  : 'text-slate-300 hover:text-white bg-slate-800/40 hover:bg-slate-800'
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5 text-pink-300" />
+              <span>Plans & Settings</span>
             </button>
           </div>
 
-          {/* Search Bar for Recruiter Name, Mobile No, Email ID, Company */}
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Recruiter Name, Mobile No, Email ID, or Company..."
-              className="w-full pl-9 pr-8 py-2 bg-[#1E293B] border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+          {/* Search Bar for Recruiter Name, Mobile No, Email ID, Company (Hidden in leads-db and settings tab) */}
+          {(adminSubTab === 'job-postings' || adminSubTab === 'recruiter-verification') && (
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by Recruiter Name, Mobile No, Email ID, or Company..."
+                className="w-full pl-9 pr-8 py-2 bg-[#1E293B] border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* TAB 1: JOB POSTINGS MODERATION (with Recruiter Name, Mobile No, Email ID & Numbering) */}
         {adminSubTab === 'job-postings' && (
           <div className="space-y-3">
-            {/* Numbering Header Bar & View Layout Toggle */}
-            <div className="flex items-center justify-between gap-2 px-1 py-1">
+            {/* Numbering Header Bar, Clean Dummy Button & View Layout Toggle */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                   <ListOrdered className="w-4 h-4 text-purple-400" />
@@ -457,46 +875,93 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     #1 – #{filteredJobs.length}
                   </span>
                 )}
+                {dummyJobs.length > 0 && (
+                  <span className="text-[10px] text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800/60 font-medium">
+                    {dummyJobs.length} dummy sample listings
+                  </span>
+                )}
               </div>
 
-              {/* View Layout Switcher: Numbered Cards vs Simple Numbered List */}
-              <div className="flex items-center gap-1 bg-[#1E293B] p-0.5 rounded-xl border border-slate-800 text-[11px]">
-                <button
-                  type="button"
-                  id="admin-view-cards-btn"
-                  onClick={() => setViewLayout('numbered-cards')}
-                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors ${
-                    viewLayout === 'numbered-cards'
-                      ? 'bg-purple-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Detailed Numbered Cards"
-                >
-                  <LayoutList className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Numbered Cards</span>
-                </button>
-                <button
-                  type="button"
-                  id="admin-view-simple-btn"
-                  onClick={() => setViewLayout('simple-list')}
-                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors ${
-                    viewLayout === 'simple-list'
-                      ? 'bg-purple-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Simple Numbered List"
-                >
-                  <ListOrdered className="w-3.5 h-3.5" />
-                  <span>Simple List</span>
-                </button>
+              <div className="flex items-center gap-2">
+                {/* Clean Dummy Jobs Action Button */}
+                {dummyJobs.length > 0 ? (
+                  <button
+                    type="button"
+                    id="admin-clean-dummy-jobs-btn"
+                    onClick={handleCleanDummyJobs}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-950/70 hover:bg-red-900/90 text-rose-200 border border-rose-700/60 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                    title={`Clean and remove ${dummyJobs.length} dummy mock job listings`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Clean Dummy Jobs ({dummyJobs.length})</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    id="admin-restore-dummy-jobs-btn"
+                    onClick={handleRestoreSampleJobs}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                    title="Restore demo mock job listings for testing"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Restore Demo Jobs</span>
+                  </button>
+                )}
+
+                {/* View Layout Switcher: Numbered Cards vs Simple Numbered List */}
+                <div className="flex items-center gap-1 bg-[#1E293B] p-0.5 rounded-xl border border-slate-800 text-[11px]">
+                  <button
+                    type="button"
+                    id="admin-view-cards-btn"
+                    onClick={() => setViewLayout('numbered-cards')}
+                    className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors ${
+                      viewLayout === 'numbered-cards'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Detailed Numbered Cards"
+                  >
+                    <LayoutList className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Numbered Cards</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="admin-view-simple-btn"
+                    onClick={() => setViewLayout('simple-list')}
+                    className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors ${
+                      viewLayout === 'simple-list'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Simple Numbered List"
+                  >
+                    <ListOrdered className="w-3.5 h-3.5" />
+                    <span>Simple List</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             {filteredJobs.length === 0 ? (
-              <div className="bg-[#1E293B] p-8 rounded-2xl border border-slate-800 text-center space-y-2">
-                <Briefcase className="w-8 h-8 text-slate-500 mx-auto" />
-                <p className="text-sm font-semibold text-slate-300">No job listings found</p>
-                <p className="text-xs text-slate-500">Try changing your search query or status filter.</p>
+              <div className="bg-[#1E293B] p-8 rounded-2xl border border-slate-800 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-900/30 border border-purple-500/30 text-purple-300 flex items-center justify-center mx-auto">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Clean Slate • 0 Job Postings</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    Dummy job postings have been cleaned. Live employer postings will appear here for verification.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  id="admin-empty-restore-jobs-btn"
+                  onClick={handleRestoreSampleJobs}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-900/50 hover:bg-purple-800/60 text-purple-200 border border-purple-600/40 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Restore Demo Sample Jobs</span>
+                </button>
               </div>
             ) : viewLayout === 'simple-list' ? (
               /* ================== SIMPLE NUMBERED LIST VIEW ================== */
@@ -682,13 +1147,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             </button>
                           )}
                           <button
+                            id={`admin-remove-job-${job.id}`}
                             onClick={() => {
                               onRemoveJob(job.id);
                               notify(`Removed Listing #${index + 1} "${job.title}".`);
                             }}
-                            className="px-2.5 py-1 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                            className="px-2.5 py-1 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                            title="Remove / Take Down Job Listing"
                           >
-                            <X className="w-3 h-3" />
+                            <Trash2 className="w-3 h-3" />
                             <span>Take Down</span>
                           </button>
                         </div>
@@ -905,13 +1372,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </button>
                         )}
                         <button
+                          id={`admin-remove-job-${job.id}`}
                           onClick={() => {
                             onRemoveJob(job.id);
                             notify(`Removed listing #${index + 1} "${job.title}" by ${recruiter.name}.`);
                           }}
-                          className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
+                          className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                          title="Remove / Take Down Job Listing"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" />
                           <span>Take Down</span>
                         </button>
                       </div>
@@ -936,11 +1405,67 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
             </div>
 
+            {/* Recruiter Queue Header Bar & Clean Action */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-purple-400" />
+                  <span>Recruiter Queue ({filteredRecruiters.length})</span>
+                </span>
+                {dummyRecruiters.length > 0 && (
+                  <span className="text-[10px] text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800/60 font-medium">
+                    {dummyRecruiters.length} dummy sample profiles
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {dummyRecruiters.length > 0 ? (
+                  <button
+                    type="button"
+                    id="admin-clean-dummy-recruiters-btn"
+                    onClick={handleCleanDummyRecruiters}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-950/70 hover:bg-red-900/90 text-rose-200 border border-rose-700/60 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                    title={`Clean and remove ${dummyRecruiters.length} dummy mock recruiter profiles`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Clean Dummy Recruiters ({dummyRecruiters.length})</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    id="admin-restore-dummy-recruiters-btn"
+                    onClick={handleRestoreSampleRecruiters}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                    title="Restore demo mock recruiters for testing"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Restore Demo Recruiters</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             {filteredRecruiters.length === 0 ? (
-              <div className="bg-[#1E293B] p-8 rounded-2xl border border-slate-800 text-center space-y-2">
-                <UserCheck className="w-8 h-8 text-slate-500 mx-auto" />
-                <p className="text-sm font-semibold text-slate-300">No recruiters match criteria</p>
-                <p className="text-xs text-slate-500">Try adjusting your filter or search query.</p>
+              <div className="bg-[#1E293B] p-8 rounded-2xl border border-slate-800 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-900/30 border border-purple-500/30 text-purple-300 flex items-center justify-center mx-auto">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Clean Queue • 0 Recruiters</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    All dummy recruiter profiles have been cleaned. Newly registered HRs will appear here for KYC review.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  id="admin-empty-restore-recruiters-btn"
+                  onClick={handleRestoreSampleRecruiters}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-900/50 hover:bg-purple-800/60 text-purple-200 border border-purple-600/40 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Restore Demo Recruiters</span>
+                </button>
               </div>
             ) : (
               filteredRecruiters.map((rec, index) => (
@@ -1097,11 +1622,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       )}
 
                       <button
+                        id={`admin-remove-recruiter-${rec.id}`}
                         onClick={() => handleRejectRecruiter(rec.id, rec.name)}
-                        className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Remove recruiter from list"
                       >
-                        <X className="w-3.5 h-3.5" />
-                        <span>Reject / Flag</span>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove Recruiter</span>
                       </button>
                     </div>
                   </div>
@@ -1110,7 +1637,167 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             )}
           </div>
         )}
+
+        {/* TAB 3: TOTAL LEADS IN DATABASE (JOB SEEKERS & EMPLOYERS) */}
+        {adminSubTab === 'database-leads' && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <AdminLeadsDatabase
+              jobSeekerLeads={jobSeekerLeads}
+              employerLeads={employerLeads}
+              onUpdateJobSeekerLeadStatus={handleUpdateJobSeekerLeadStatus}
+              onUpdateEmployerLeadStatus={handleUpdateEmployerLeadStatus}
+              onAddJobSeekerLead={handleAddJobSeekerLead}
+              onAddEmployerLead={handleAddEmployerLead}
+              onToast={(msg) => setNotification(msg)}
+            />
+          </div>
+        )}
+
+        {/* TAB 4: CHOOSE YOUR PLAN & OTHER PLATFORM SETTINGS */}
+        {adminSubTab === 'plans-settings' && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <AdminPlansAndSettings
+              plans={plans}
+              settings={settings}
+              onSavePlans={handleSavePlans}
+              onSaveSettings={handleSaveSettings}
+              onToast={(msg) => setNotification(msg)}
+            />
+          </div>
+        )}
       </div>
+
+      {/* Clean Dummy Database & Postings Modal */}
+      {isCleanDatabaseModalOpen && (
+        <div
+          id="admin-clean-dummy-modal"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
+          <div className="bg-[#1E293B] border border-rose-800/60 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative text-slate-100">
+            <button
+              id="close-clean-dummy-modal-btn"
+              onClick={() => setIsCleanDatabaseModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-white">Clean Dummy Postings & Recruiters</h3>
+                <p className="text-xs text-rose-200/80">Admin Moderation & Database Reset</p>
+              </div>
+            </div>
+
+            <div className="bg-[#0F172A] p-3.5 rounded-2xl border border-slate-700/80 space-y-2 text-xs">
+              <p className="text-slate-300 leading-relaxed">
+                Remove hardcoded sample demo job postings and dummy recruiter profiles from the Admin Panel to keep your production workspace clean.
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="bg-rose-950/40 border border-rose-800/40 rounded-xl p-2.5">
+                  <span className="text-[10px] text-rose-300 block font-bold">Dummy Job Postings</span>
+                  <span className="text-lg font-black text-white">{dummyJobs.length}</span>
+                  <span className="text-[10px] text-slate-400 block">Sample mock listings</span>
+                </div>
+                <div className="bg-rose-950/40 border border-rose-800/40 rounded-xl p-2.5">
+                  <span className="text-[10px] text-rose-300 block font-bold">Dummy Recruiters</span>
+                  <span className="text-lg font-black text-white">{dummyRecruiters.length}</span>
+                  <span className="text-[10px] text-slate-400 block">Sample mock profiles</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              {/* Clean Job Postings */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/80 border border-slate-800 gap-2">
+                <div>
+                  <span className="font-bold text-xs text-white block">1. Clean Dummy Job Postings</span>
+                  <span className="text-[11px] text-slate-400">
+                    Removes {dummyJobs.length} sample mock jobs from database.
+                  </span>
+                </div>
+                <button
+                  id="modal-clean-dummy-jobs-btn"
+                  disabled={dummyJobs.length === 0}
+                  onClick={() => {
+                    handleCleanDummyJobs();
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+                    dummyJobs.length > 0
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clean Jobs ({dummyJobs.length})</span>
+                </button>
+              </div>
+
+              {/* Clean Recruiters */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/80 border border-slate-800 gap-2">
+                <div>
+                  <span className="font-bold text-xs text-white block">2. Clean Dummy Recruiters Queue</span>
+                  <span className="text-[11px] text-slate-400">
+                    Removes {dummyRecruiters.length} sample mock HR recruiter profiles.
+                  </span>
+                </div>
+                <button
+                  id="modal-clean-dummy-recruiters-btn"
+                  disabled={dummyRecruiters.length === 0}
+                  onClick={() => {
+                    handleCleanDummyRecruiters();
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+                    dummyRecruiters.length > 0
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clean Recruiters ({dummyRecruiters.length})</span>
+                </button>
+              </div>
+
+              {/* 1-Click Clean Both */}
+              <button
+                id="modal-clean-all-dummy-btn"
+                onClick={handleCleanAllDummyData}
+                className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 active:scale-98 text-white text-xs font-extrabold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Eraser className="w-4 h-4" />
+                <span>Clean All Dummy Lists (Job Postings + Recruiters)</span>
+              </button>
+
+              {/* Restore Sample Data */}
+              <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                <button
+                  id="modal-restore-all-demo-btn"
+                  onClick={() => {
+                    handleRestoreSampleJobs();
+                    handleRestoreSampleRecruiters();
+                    setIsCleanDatabaseModalOpen(false);
+                  }}
+                  className="text-xs text-slate-400 hover:text-purple-300 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Restore Demo Sample Data</span>
+                </button>
+
+                <button
+                  id="modal-done-btn"
+                  onClick={() => setIsCleanDatabaseModalOpen(false)}
+                  className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
