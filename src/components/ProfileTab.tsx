@@ -26,6 +26,7 @@ import {
   Phone,
   Mail,
   Headphones,
+  RotateCcw,
 } from 'lucide-react';
 import { UserProfile, UserEducation, UserExperienceItem } from '../types';
 import { SUPPORT_CONTENT } from '../data/supportData';
@@ -40,6 +41,7 @@ interface ProfileTabProps {
   onOpenAuth?: (tab: 'login' | 'signup') => void;
   isLoggedIn?: boolean;
   onLogout?: () => void;
+  onRefreshProfile?: () => void;
 }
 
 type EditSectionType =
@@ -64,11 +66,40 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   onOpenAuth,
   isLoggedIn = false,
   onLogout,
+  onRefreshProfile,
 }) => {
   // Active modal section for editing
   const [activeEditSection, setActiveEditSection] = useState<EditSectionType>(null);
   const [formData, setFormData] = useState<UserProfile>({ ...profile });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sync formData whenever profile changes (e.g. on logout or refresh)
+  React.useEffect(() => {
+    setFormData({ ...profile });
+  }, [profile]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    if (onRefreshProfile) {
+      onRefreshProfile();
+    } else {
+      try {
+        const saved = localStorage.getItem('jobs_india_user_profile');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setFormData(parsed);
+          onUpdateProfile(parsed);
+        } else {
+          setFormData({ ...profile });
+        }
+      } catch {
+        setFormData({ ...profile });
+      }
+    }
+    showToast('Job Seeker Profile Refreshed');
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   // Field temporary states for adding items
   const [newSkillInput, setNewSkillInput] = useState('');
@@ -211,20 +242,42 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
         <button
           id="profile-nav-back-btn"
           onClick={onBackToHome}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors active:scale-95"
+          className="p-1 hover:bg-white/10 rounded-full transition-colors active:scale-95 cursor-pointer"
           title="Back"
         >
           <ArrowLeft className="w-5 h-5 text-white stroke-[2.2]" />
         </button>
 
-        <button
-          id="profile-nav-share-btn"
-          onClick={handleShare}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors active:scale-95"
-          title="Share Profile"
-        >
-          <Share2 className="w-5 h-5 text-white stroke-[2.2]" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            id="profile-nav-refresh-btn"
+            onClick={handleRefresh}
+            className="p-1.5 hover:bg-white/10 rounded-full transition-all active:scale-95 text-white cursor-pointer"
+            title="Refresh Profile"
+          >
+            <RotateCcw className={`w-4 h-4 text-white stroke-[2.2] ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+
+          <button
+            id="profile-nav-share-btn"
+            onClick={handleShare}
+            className="p-1.5 hover:bg-white/10 rounded-full transition-colors active:scale-95 cursor-pointer"
+            title="Share Profile"
+          >
+            <Share2 className="w-4 h-4 text-white stroke-[2.2]" />
+          </button>
+
+          {isLoggedIn && onLogout && (
+            <button
+              id="profile-nav-logout-btn"
+              onClick={onLogout}
+              className="p-1.5 hover:bg-red-500/20 text-red-200 hover:text-white rounded-full transition-colors active:scale-95 cursor-pointer"
+              title="Log Out & Reset"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </header>
 
       {/* MAIN PROFILE BODY */}
@@ -1163,20 +1216,31 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               </div>
 
               <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Refresh Profile Data"
+                >
+                  <RotateCcw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-purple-400' : ''}`} />
+                  <span>Refresh</span>
+                </button>
                 {isLoggedIn ? (
                   <>
                     <button
                       onClick={() => onOpenAuth('login')}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors cursor-pointer"
                     >
                       Switch
                     </button>
                     {onLogout && (
                       <button
                         onClick={onLogout}
-                        className="px-2.5 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 text-xs font-bold transition-colors"
+                        className="px-2.5 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Log Out & Reset"
                       >
-                        Log Out
+                        <LogOut className="w-3 h-3" />
+                        <span>Log Out</span>
                       </button>
                     )}
                   </>
@@ -1184,13 +1248,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                   <>
                     <button
                       onClick={() => onOpenAuth('signup')}
-                      className="px-3 py-1.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#022c22] text-xs font-extrabold shadow-sm transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#022c22] text-xs font-extrabold shadow-sm transition-colors cursor-pointer"
                     >
                       Sign Up
                     </button>
                     <button
                       onClick={() => onOpenAuth('login')}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors"
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors cursor-pointer"
                     >
                       Log In
                     </button>

@@ -306,9 +306,26 @@ export default function App() {
     localStorage.removeItem('jobs_india_logged_user');
     localStorage.removeItem('jobs_india_logged_mode');
     localStorage.removeItem('jobs_india_admin_auth');
+    localStorage.removeItem('jobs_india_user_profile');
+    setUserProfile(INITIAL_USER_PROFILE);
     setCurrentMode('job-seeker');
-    setModeToast('Successfully logged out');
+    setModeToast('Logged out successfully • Profile refreshed');
     setTimeout(() => setModeToast(null), 3000);
+  };
+
+  const handleRefreshProfile = () => {
+    try {
+      const saved = localStorage.getItem('jobs_india_user_profile');
+      if (saved) {
+        setUserProfile(JSON.parse(saved));
+      } else {
+        setUserProfile(INITIAL_USER_PROFILE);
+      }
+    } catch {
+      setUserProfile(INITIAL_USER_PROFILE);
+    }
+    setModeToast('Job Seeker Profile refreshed');
+    setTimeout(() => setModeToast(null), 2500);
   };
 
   const handleVerifyJob = (jobId: string) => {
@@ -787,6 +804,7 @@ export default function App() {
                 onOpenAuth={handleOpenAuth}
                 isLoggedIn={isLoggedIn}
                 onLogout={handleLogout}
+                onRefreshProfile={handleRefreshProfile}
               />
             )}
           </main>
