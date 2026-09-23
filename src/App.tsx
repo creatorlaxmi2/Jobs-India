@@ -128,6 +128,7 @@ export default function App() {
   const [isSwitchModeOpen, setIsSwitchModeOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authInitialTab, setAuthInitialTab] = useState<'login' | 'signup'>('login');
+  const [authInitialAccountType, setAuthInitialAccountType] = useState<'job-seeker' | 'employer' | 'admin'>('job-seeker');
   const [modeToast, setModeToast] = useState<string | null>(null);
 
   // Admin Panel Login Password & Security State
@@ -189,11 +190,17 @@ export default function App() {
     setIsAdminAuthModalOpen(true);
   };
 
-  const handleAdminLoginSuccess = () => {
+  const handleAdminLoginSuccess = (email?: string) => {
+    const adminEmail = email || localStorage.getItem('jobs_india_admin_email') || 'rajashok926@gmail.com';
     setIsAdminAuthenticated(true);
+    setIsLoggedIn(true);
     localStorage.setItem('jobs_india_admin_auth', 'true');
+    localStorage.setItem('jobs_india_admin_email', adminEmail);
+    localStorage.setItem('jobs_india_logged_in', 'true');
+    localStorage.setItem('jobs_india_logged_mode', 'admin');
+    localStorage.setItem('jobs_india_logged_user', adminEmail);
     setCurrentMode('admin');
-    setModeToast('Super Admin Authenticated • Welcome to Admin Moderation Panel');
+    setModeToast(`Super Admin Authenticated (${adminEmail}) • Welcome to Access Panel`);
     setTimeout(() => setModeToast(null), 3500);
   };
 
@@ -212,8 +219,12 @@ export default function App() {
     setTimeout(() => setModeToast(null), 3500);
   };
 
-  const handleOpenAuth = (tab: 'login' | 'signup') => {
+  const handleOpenAuth = (
+    tab: 'login' | 'signup',
+    initialAccountType: 'job-seeker' | 'employer' | 'admin' = 'job-seeker'
+  ) => {
     setAuthInitialTab(tab);
+    setAuthInitialAccountType(initialAccountType);
     setIsAuthModalOpen(true);
   };
 
@@ -819,6 +830,7 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         initialTab={authInitialTab}
+        initialAccountType={authInitialAccountType}
         adminPassword={adminPassword}
         onOpenAdminResetPassword={() => handleOpenAdminAuth('reset')}
         onLoginSuccess={handleLoginSuccess}

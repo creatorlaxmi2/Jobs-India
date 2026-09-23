@@ -439,45 +439,76 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   return (
     <div id="admin-portal-view" className="min-h-screen bg-[#0F172A] text-slate-100 pb-24">
-      {/* Top Admin Bar matching reference */}
-      <div className="bg-[#1E1B4B] border-b border-purple-900/60 text-white px-4 py-3 sticky top-0 z-20 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#A855F7]/25 border border-[#A855F7]/40 flex items-center justify-center text-[#C084FC]">
+      {/* Top Admin Bar with Centered Logout Button */}
+      <div className="bg-[#1E1B4B] border-b border-purple-900/60 text-white px-3 sm:px-4 py-2 sm:py-2.5 sticky top-0 z-20 shadow-lg w-full max-w-full">
+        <div className="flex items-center justify-between gap-2 max-w-2xl mx-auto">
+          {/* Left: Admin Identity */}
+          <div className="flex items-center gap-2 min-w-0 flex-shrink">
+            <div className="w-8 h-8 rounded-xl bg-[#A855F7]/25 border border-[#A855F7]/40 flex items-center justify-center text-[#C084FC] flex-shrink-0">
               <Shield className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-sm tracking-tight text-white">
-                  Admin Moderation Panel
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h1 className="font-extrabold text-xs sm:text-sm tracking-tight text-white whitespace-nowrap">
+                  Admin Access Panel
                 </h1>
-                <span className="bg-[#A855F7]/30 text-[#C084FC] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#A855F7]/40">
+                <span className="bg-[#A855F7]/30 text-[#C084FC] text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border border-[#A855F7]/40 whitespace-nowrap">
                   Super Admin
                 </span>
               </div>
-              <p className="text-[11px] text-purple-200/70">
-                Jobs India • Trust, Verification & Safety
+              <p className="text-[10px] text-purple-300 font-medium truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span>{localStorage.getItem('jobs_india_admin_email') || 'rajashok926@gmail.com'}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* CENTER: Dedicated Prominent LOGOUT Button */}
+          <div className="flex items-center justify-center flex-shrink-0 mx-1">
+            <button
+              id="admin-lock-btn"
+              data-testid="admin-logout-top-btn"
+              onClick={onLockAdminSession}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 active:scale-95 text-white border border-red-400/50 text-xs font-extrabold transition-all shadow-md hover:shadow-red-900/40 cursor-pointer"
+              title="Logout / Lock Admin Session"
+            >
+              <LogOut className="w-3.5 h-3.5 text-white flex-shrink-0" />
+              <span>Logout</span>
+            </button>
+          </div>
+
+          {/* Right: Quick Action Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            {/* Clean Dummy List Top Button */}
+            <button
+              id="admin-topbar-clean-dummy-btn"
+              onClick={() => setIsCleanDatabaseModalOpen(true)}
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 text-rose-200 border border-rose-700/60 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Clean and remove dummy mock list of Job Postings and Recruiters"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <span className="hidden md:inline">Clean Dummy</span>
+              {(dummyJobs.length > 0 || dummyRecruiters.length > 0) && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+
             {/* Password & Security Reset Button */}
             <button
               id="admin-security-btn"
               onClick={() => onOpenAdminSecurity?.('reset')}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 text-purple-200 border border-purple-600/50 text-xs font-semibold transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 text-purple-200 border border-purple-600/50 text-xs font-semibold transition-colors"
               title="Reset or Change Admin Password"
             >
               <KeyRound className="w-3.5 h-3.5 text-purple-300" />
-              <span className="hidden sm:inline">Reset Password</span>
+              <span className="hidden lg:inline">Password</span>
             </button>
 
             {/* Total Leads Database Top Button */}
             <button
               id="admin-topbar-leads-db-btn"
               onClick={() => setAdminSubTab('database-leads')}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`hidden sm:flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 adminSubTab === 'database-leads'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md border border-blue-400/50'
                   : 'bg-blue-900/40 hover:bg-blue-800/60 text-blue-200 border border-blue-600/40'
@@ -485,14 +516,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               title="Total Leads in Database (Job Seekers & Employers)"
             >
               <Database className="w-3.5 h-3.5 text-sky-300" />
-              <span className="hidden md:inline">Leads Database</span>
+              <span className="hidden lg:inline">Leads DB</span>
             </button>
 
             {/* Plans & Other Settings Top Button */}
             <button
               id="admin-topbar-plans-settings-btn"
               onClick={() => setAdminSubTab('plans-settings')}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`hidden sm:flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 adminSubTab === 'plans-settings'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md border border-pink-400/50'
                   : 'bg-purple-900/40 hover:bg-purple-800/60 text-purple-200 border border-purple-600/40'
@@ -500,41 +531,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               title="Edit Choose Your Plan & Other Settings"
             >
               <CreditCard className="w-3.5 h-3.5 text-pink-300" />
-              <span className="hidden md:inline">Plans & Settings</span>
-            </button>
-
-            {/* Clean Dummy List Top Button */}
-            <button
-              id="admin-topbar-clean-dummy-btn"
-              onClick={() => setIsCleanDatabaseModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 text-rose-200 border border-rose-700/60 text-xs font-bold transition-all shadow-xs cursor-pointer"
-              title="Clean and remove dummy mock list of Job Postings and Recruiters"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-              <span className="hidden sm:inline">Clean Dummy List</span>
-              {(dummyJobs.length > 0 || dummyRecruiters.length > 0) && (
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-              )}
-            </button>
-
-            {/* Lock / Exit Admin Session */}
-            <button
-              id="admin-lock-btn"
-              onClick={onLockAdminSession}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-red-950/50 hover:bg-red-900/60 text-red-200 border border-red-800/40 text-xs font-semibold transition-colors"
-              title="Lock Admin Session and Exit"
-            >
-              <Lock className="w-3.5 h-3.5 text-red-400" />
-              <span className="hidden sm:inline">Lock Session</span>
+              <span className="hidden lg:inline">Plans</span>
             </button>
 
             {/* Switch Mode */}
             <button
               id="admin-switch-mode-btn"
               onClick={onOpenSwitchMode}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-700/50 text-xs font-bold transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-950/90 hover:bg-purple-900 text-purple-200 border border-purple-700/50 text-xs font-bold transition-colors cursor-pointer"
             >
-              <span>Switch Mode</span>
+              <span className="hidden sm:inline">Switch Mode</span>
+              <span className="sm:hidden">Switch</span>
               <span className="w-2 h-2 rounded-full bg-[#A855F7]" />
             </button>
           </div>

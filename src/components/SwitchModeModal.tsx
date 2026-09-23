@@ -42,7 +42,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
           <button
             id="close-switch-mode-modal"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -58,7 +58,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
               onSelectMode('job-seeker');
               onClose();
             }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-left transition-all group ${
+            className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-left transition-all group cursor-pointer ${
               currentMode === 'job-seeker'
                 ? 'bg-[#1E293B] ring-1 ring-[#10B981]/50'
                 : 'hover:bg-[#1C2438]'
@@ -84,7 +84,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
               onSelectMode('employer');
               onClose();
             }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-left transition-all group ${
+            className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-left transition-all group cursor-pointer ${
               currentMode === 'employer'
                 ? 'bg-[#2A2318] ring-1 ring-[#F59E0B]/50'
                 : 'hover:bg-[#1C2438]'
@@ -164,7 +164,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
                       onClose();
                       onOpenAdminAuth?.('reset');
                     }}
-                    className="text-[10px] text-purple-300 hover:text-white bg-purple-900/50 hover:bg-purple-800 px-2 py-1 rounded-lg border border-purple-700/50 transition-colors"
+                    className="text-[10px] text-purple-300 hover:text-white bg-purple-900/50 hover:bg-purple-800 px-2 py-1 rounded-lg border border-purple-700/50 transition-colors cursor-pointer"
                     title="Reset Admin Password"
                   >
                     Reset
@@ -187,7 +187,7 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
               onClose();
               onOpenAuth('login');
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-left hover:bg-[#1C2438] transition-all group"
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-left hover:bg-[#1C2438] transition-all group cursor-pointer"
           >
             <LogIn className="w-5 h-5 text-[#10B981] stroke-[2.2] flex-shrink-0" />
             <span className="font-bold text-[15px] text-[#10B981] tracking-tight">
@@ -195,14 +195,14 @@ export const SwitchModeModal: React.FC<SwitchModeModalProps> = ({
             </span>
           </button>
 
-          {/* Create Account (Sign Up) */}
+          {/* Create Account */}
           <button
             id="switch-mode-signup-btn"
             onClick={() => {
               onClose();
               onOpenAuth('signup');
             }}
-            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-left hover:bg-[#1C2438] transition-all group"
+            className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-left hover:bg-[#1C2438] transition-all group cursor-pointer"
           >
             <UserPlus className="w-5 h-5 text-[#2DD4BF] stroke-[2.2] flex-shrink-0" />
             <span className="font-bold text-[15px] text-[#2DD4BF] tracking-tight">

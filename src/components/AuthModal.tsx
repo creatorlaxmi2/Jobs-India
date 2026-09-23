@@ -27,6 +27,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: 'login' | 'signup';
+  initialAccountType?: 'job-seeker' | 'employer' | 'admin';
   adminPassword?: string;
   onOpenAdminResetPassword?: () => void;
   onLoginSuccess: (
@@ -77,12 +78,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   initialTab = 'signup',
+  initialAccountType = 'job-seeker',
   adminPassword,
   onOpenAdminResetPassword,
   onLoginSuccess,
 }) => {
   const [tab, setTab] = useState<'login' | 'signup' | 'otp'>(initialTab);
-  const [accountType, setAccountType] = useState<'job-seeker' | 'employer' | 'admin'>('job-seeker');
+  const [accountType, setAccountType] = useState<'job-seeker' | 'employer' | 'admin'>(initialAccountType);
   const [resetFeedback, setResetFeedback] = useState<string | null>(null);
 
   // Job Seeker Signup Fields
@@ -125,17 +127,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [isSuccess, setIsSuccess] = useState(false);
   const [successInfo, setSuccessInfo] = useState<{ mode: AppMode; name: string } | null>(null);
 
-  // Synchronize initial tab when modal opens
+  // Synchronize initial tab and account type when modal opens
   useEffect(() => {
     if (isOpen) {
       setTab(initialTab);
+      if (initialAccountType) {
+        setAccountType(initialAccountType);
+      }
       setErrorMessage(null);
       setIsSuccess(false);
       setIsSubmitting(false);
       setOtpSent(false);
       setOtpCode('');
     }
-  }, [isOpen, initialTab]);
+  }, [isOpen, initialTab, initialAccountType]);
 
   if (!isOpen) return null;
 
@@ -281,6 +286,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     // Admin security validation
     if (accountType === 'admin') {
+      const normalizedEmail = loginEmailOrPhone.trim().toLowerCase();
+      const authorizedAdmins = [
+        'rajashok926@gmail.com',
+        'creatorlaxmi2@gmail.com',
+        'support.jobsindia@gmail.com',
+        'admin@jobsindia.com',
+      ];
+      const storedAdminEmail = localStorage.getItem('jobs_india_admin_email')?.trim().toLowerCase();
+      const isAuthorized =
+        authorizedAdmins.includes(normalizedEmail) ||
+        (storedAdminEmail && storedAdminEmail === normalizedEmail);
+
+      if (!isAuthorized) {
+        setErrorMessage(
+          `❌ Access Denied: Wrong Email ID! "${loginEmailOrPhone}" is not an authorized Super Admin. Access blocked.`
+        );
+        return;
+      }
+
       const targetPass = adminPassword || 'admin@123';
       if (loginPassword !== targetPass) {
         setErrorMessage(`Incorrect Admin Password! (Default: ${targetPass}). Click Auto-fill or Reset.`);
