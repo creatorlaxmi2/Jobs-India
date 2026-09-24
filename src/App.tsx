@@ -12,6 +12,7 @@ import {
   PremiumPlan,
   PlatformSettings,
 } from './types';
+import { saveUserToFirestore } from './lib/firebaseAuth';
 import {
   INITIAL_JOBS,
   INITIAL_USER_PROFILE,
@@ -285,13 +286,17 @@ export default function App() {
     }
 
     setCurrentMode(mode);
-    setUserProfile((prev) => ({
-      ...prev,
-      name: userName,
-      email: details?.email || prev.email,
-      phone: details?.phone || prev.phone,
-      city: details?.city ? details.city.split(',')[0].trim() : prev.city,
-    }));
+    setUserProfile((prev) => {
+      const updated = {
+        ...prev,
+        name: userName,
+        email: details?.email || prev.email,
+        phone: details?.phone || prev.phone,
+        city: details?.city ? details.city.split(',')[0].trim() : prev.city,
+      };
+      saveUserToFirestore(updated.email || 'user', updated);
+      return updated;
+    });
     const label = `Logged in as ${userName} (${
       mode === 'employer' ? 'Employer / HR' : mode === 'admin' ? 'Admin' : 'Job Seeker'
     })`;
@@ -793,6 +798,7 @@ export default function App() {
                   } catch {
                     // ignore
                   }
+                  saveUserToFirestore(updated.email || 'user', updated);
                   if (updated.city && updated.locality) {
                     setCurrentCity(updated.city);
                     setCurrentLocality(updated.locality);
