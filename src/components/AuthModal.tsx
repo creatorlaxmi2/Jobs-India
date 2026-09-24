@@ -652,22 +652,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {/* ================= SIGN UP TAB ================= */}
             {tab === 'signup' && (
               <form noValidate onSubmit={handleSignupSubmit} className="space-y-3">
-                {/* 1-Tap Auto-fill Sample Button */}
-                <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700/60 rounded-xl px-3 py-1.5">
-                  <span className="text-[11px] text-slate-300 font-medium">
-                    Want to test registration instantly?
-                  </span>
-                  <button
-                    type="button"
-                    id="signup-autofill-btn"
-                    onClick={handleAutoFillSignup}
-                    className="text-[11px] font-bold text-[#10B981] hover:underline flex items-center gap-1 bg-[#10B981]/15 px-2 py-0.5 rounded-lg border border-[#10B981]/30"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>Auto-Fill Sample</span>
-                  </button>
-                </div>
-
                 {accountType === 'job-seeker' ? (
                   <>
                     {/* Seeker: Full Name */}
@@ -909,22 +893,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {/* ================= LOGIN TAB ================= */}
             {tab === 'login' && (
               <form noValidate onSubmit={handleLoginSubmit} className="space-y-3">
-                {/* 1-Tap Auto-fill Sample Button */}
-                <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700/60 rounded-xl px-3 py-1.5">
-                  <span className="text-[11px] text-slate-300 font-medium">
-                    Test with sample credentials:
-                  </span>
-                  <button
-                    type="button"
-                    id="login-autofill-btn"
-                    onClick={handleAutoFillLogin}
-                    className="text-[11px] font-bold text-[#10B981] hover:underline flex items-center gap-1 bg-[#10B981]/15 px-2 py-0.5 rounded-lg border border-[#10B981]/30"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>Auto-Fill Credentials</span>
-                  </button>
-                </div>
-
                 {/* Admin Password Hint if in Admin mode */}
                 {accountType === 'admin' && (
                   <div className="p-2 bg-purple-950/60 border border-purple-800/60 rounded-xl text-[11px] text-purple-200 flex items-center justify-between gap-1">
@@ -1119,39 +1087,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </button>
               </form>
             )}
-
-            {/* Quick 1-Click Instant Demo Login Strip */}
-            <div className="pt-2 border-t border-slate-800/80">
-              <span className="text-[10px] font-bold text-slate-400 block mb-1.5 text-center uppercase tracking-wider">
-                1-Click Quick Demo Sign In
-              </span>
-              <div className="grid grid-cols-3 gap-1.5 text-center">
-                <button
-                  type="button"
-                  id="quick-demo-seeker-btn"
-                  onClick={() => handleDemoQuickLogin('job-seeker')}
-                  className="py-1.5 px-1 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 text-[11px] font-bold text-[#10B981] transition-colors"
-                >
-                  Seeker Demo
-                </button>
-                <button
-                  type="button"
-                  id="quick-demo-employer-btn"
-                  onClick={() => handleDemoQuickLogin('employer')}
-                  className="py-1.5 px-1 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 text-[11px] font-bold text-[#F59E0B] transition-colors"
-                >
-                  Employer Demo
-                </button>
-                <button
-                  type="button"
-                  id="quick-demo-admin-btn"
-                  onClick={() => handleDemoQuickLogin('admin')}
-                  className="py-1.5 px-1 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 text-[11px] font-bold text-[#C084FC] transition-colors"
-                >
-                  Admin Demo
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>
