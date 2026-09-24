@@ -102,6 +102,16 @@ export interface UserProfile {
   linkedInUrl?: string;
   linkedInHeadline?: string;
   linkedInImportedAt?: string;
+  points?: number;
+  coins?: number;
+  referralCount?: number;
+  rewardsClaimed?: string[];
+  achievements?: {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+  }[];
 }
 
 export type ApplicationStatus =

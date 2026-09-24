@@ -532,7 +532,11 @@ export const INITIAL_USER_PROFILE = {
   preferredRoles: ['Staff Nurse', 'Nursing Supervisor', 'Patient Care Executive'],
   preferredLocations: ['Patna', 'Muhammadpur', 'Bailey Road'],
   workPreference: 'All' as const,
-  completionPercentage: 77
+  completionPercentage: 77,
+  points: 250,
+  coins: 50,
+  referralCount: 2,
+  rewardsClaimed: ['Welcome Bonus (100 pts)', 'Profile Setup (150 pts)']
 };
 
 export const INITIAL_APPLICATIONS: Application[] = [
